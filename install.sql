@@ -4,6 +4,7 @@ CREATE TABLE posts (
 	title TEXT NOT NULL, 
 	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	updated_at DATETIME DEFAULT NULL,  
+	reply_at DATETIME DEFAULT NULL, 
 	summary TEXT NOT NULL, 
 	plain TEXT NOT NULL, 
 	raw TEXT NOT NULL, 
@@ -16,6 +17,7 @@ CREATE TABLE posts (
 
 CREATE INDEX idx_posts_on_created_at ON posts ( created_at );
 CREATE INDEX idx_posts_on_updated_at ON posts ( updated_at );
+CREATE INDEX idx_posts_on_reply_at ON posts ( reply_at );
 CREATE INDEX idx_posts_on_quality ON posts ( quality );
 CREATE INDEX idx_posts_on_status ON posts ( status );
 
@@ -59,7 +61,8 @@ END;
 
 CREATE TRIGGER post_family_after_insert AFTER INSERT ON posts_family FOR EACH ROW 
 BEGIN
-	UPDATE posts SET reply_count = ( reply_count + 1 ) WHERE id = NEW.parent_id;
+	UPDATE posts SET reply_count = ( reply_count + 1 ), reply_at = CURRENT_TIMESTAMP 
+		WHERE id = NEW.parent_id;
 END;
 
 
