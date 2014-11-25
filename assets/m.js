@@ -282,6 +282,7 @@ function vote(e, v) {
 	}
 	
 	var u;
+	
 	if ( v == 1 ) {
 		u = '/?id='+i+'&vote=1';
 		ajax( u, 'text', function( r ) {
@@ -336,7 +337,9 @@ function vlinks(e) {
 function mods(e) {
 	var id = e.getAttribute('id');
 	if ( votes[id] != undefined ) {
-		if ( votes[id] === '1' ) {
+		if ( votes[id] === '0' ) {
+			e.className += ' self';
+		} else if ( votes[id] === '1' ) {
 			e.className += ' p1';
 		} else {
 			e.className += ' m1';
