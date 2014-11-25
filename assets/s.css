@@ -1,0 +1,376 @@
+* {
+	margin: 0;
+	padding: 0;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	vertical-align: baseline;
+}
+html {
+	color: #444;
+	background: #f8f8ff;
+	-ms-text-size-adjust: 100%;
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+body {
+	font: 400 .9em Helvetica, Arial, sans-serif;
+	min-width: 360px;
+	text-align: center;
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary {
+	display: block;
+}
+footer {
+	font-size: 80%;
+	line-height: 1.5em;
+	padding: 0 0 0 120px;
+	background: url(img/bunny.png) left no-repeat;
+}
+audio, canvas, progress, video {
+	display: inline-block;
+	vertical-align: baseline;
+}
+audio:not([controls]) {
+	display: none;
+	height: 0;
+}
+main {
+	line-height: 1.6em;
+}
+h1, h2, h3, h4, h5, h6, p {
+	margin: 0 0 1em 0;
+	font-size: 100%;
+	font-weight: 400;
+}
+h1 {
+	font-size: 1.7em;
+	
+}
+h2 {
+	font-size: 1.6em;
+	margin: 0;
+}
+h3 {
+	font-size: 1.5em;
+}
+h4 {
+	font-size: 1.4em;
+}
+h5 {
+	font-size: 1.3em;
+}
+h6 {
+	font-weight: 600;
+}
+a {
+	background: transparent;
+	text-decoration:underline;
+	color: #44b;
+}
+a:visited {
+	color: #777;
+}
+a:active, a:hover {
+	outline: 0;
+}
+a:hover, .func a, .meta a {
+	text-decoration: none;
+}
+.meta a, .meta a:visited, nav a {
+	color: #77e;
+}
+.meta {
+	font-weight: 600;
+}
+.func  {
+	font-size: 80%;
+	word-spacing: .5em;
+	text-align: right;
+}
+form .func {
+	float: right;
+}
+.func a {
+	word-spacing: normal;
+	font-weight: bold;
+	color: #777;
+}
+q:before, q:after {
+	content: '';
+}
+svg:not(:root) {
+	overflow: hidden;
+}
+pre, code, kbd, samp, tt {
+	font-family: monospace;
+	line-height: 100%;
+}
+code, pre {
+	overflow: auto;
+	margin: 1em 0;
+}
+abbr, acronym {
+	border: 0;
+	font-variant:normal;
+}
+address, caption, cite, code, dfn, em, strong, table, td, th, var, optgroup {
+	font-style: inherit;
+	font-weight: inherit;
+}
+
+em {
+	font-style: italic;
+}
+strong {
+	font-weight: 700;
+}
+small, .small, .meta {
+	font-size: 90%;
+}
+footer small {
+	font-size: 95%;
+}
+.meta time {
+	font-weight: 600;
+	color: #999;
+	float: right;
+}
+table.legend {
+	width: 100%;
+	color:#333;
+	border: 1px solid #aaa;
+	border-collapse: collapse;
+	margin: 1em 0;
+}
+table.legend th {
+	font-weight: 600;
+}
+table.legend th, table.legend td {
+	border: 1px solid #aaa;
+	padding: .3em .6em;
+	width: 50%;
+}
+table.legend th {
+	background-color: #dedede;
+}
+table.legend td {
+	background-color: #fff;
+}
+blockquote {
+	font-style: italic;
+	margin: 0 3em;
+}
+ul, ol {
+	margin: 1em 2em;
+}
+ul.posts {
+	margin: 2em 0;
+	list-style: none;
+}
+
+ul.posts li{
+	margin: 1em 0;
+}
+nav ul {
+	list-style: none;
+	margin: 1em 0;
+}
+nav ul li {
+	display: inline-block;
+	margin: 0;
+}
+nav ul li + li:before  {
+	content: '|';
+	padding: 0 1em;
+	color: #aaa;
+}
+nav ul li a {
+	color: #77e;
+	text-decoration: none;
+	font-weight: bold;
+}
+nav ul li.active a, nav ul li span {
+	color: #444;
+}
+
+nav.page {
+	margin: 2em 0;
+}
+nav.page ul li:last-child a {
+	padding: 0 16px 0 0;
+	background: url(img/r.png) right no-repeat;
+}
+nav.page ul li:first-child a {
+	padding: 0 0 0 16px;
+	background: url(img/l.png) left no-repeat;
+}
+code {
+	counter-reset: code-counter;
+	display: block;
+	color: #444;
+	font-weight: 600;
+	line-height: 1.4em;
+	white-space: pre;
+	padding: .4em;
+}
+code.styled {
+	white-space: inherit;
+	line-height: inherit;
+	padding: 0;
+}
+code .highlight span {white-space: pre;
+	margin: 0;
+	white-space: pre;
+	padding: .2em .6em;
+	display: block;
+	background: #dedede;
+}
+code .highlight span:before {
+	content: counter(code-counter);
+	counter-increment: code-counter;
+	padding-right: 1em;
+	color: #aaa;
+	font-weight: 900;
+}
+code .highlight span:nth-child(even) {
+	background: #efefff;
+}
+code .container {
+	display: none;
+	white-space: pre;
+}
+code .anchors {
+	font-family: Helvetica, arial, sans-serif;
+	font-weight: 400;
+	padding: .2em;
+	text-decoration: none;
+	color: #555;
+	font-weight: 600;
+	font-size: 90%;
+}
+legend {
+	color: #555;
+	font-weight: 600;
+	margin: 1em 0;
+}
+input, button, textarea, select, optgroup, option {
+	font: inherit;
+}
+select, input, button, textarea, button {
+	font-size: 99%;
+}
+textarea {
+	overflow: auto;
+}
+input[type="text"], input[type="search"], textarea {
+	border: 1px solid #bbb;
+	line-height: inherit;
+	border-radius: .3em;
+	width: 100%;
+	color: #444;
+	padding: .5em;
+}
+button, input[type="button"], input[type="reset"], input[type="submit"] {
+	-webkit-appearance: button;
+	cursor: pointer;
+	border: 0;
+	background: #fff;
+	font-weight: bold;
+	color: #777;
+	padding: .5em 2em;
+	border: 1px solid #999;
+	border-radius: .3em;
+}
+button:hover, input[type="button"]:hover, input[type="reset"]:hover, input[type="submit"]:hover {
+	color: #555;
+}
+button:active, input[type="button"]:active, input[type="reset"]:active, input[type="submit"]:active {
+	color: #eee;
+	background: #777;
+	border-color: #444;
+}
+:-moz-placeholder {
+	color: #999;
+}
+::-moz-placeholder {
+	color: #999;
+}
+::-webkit-input-placeholder {
+	color: #999;
+}
+:-ms-input-placeholder {
+	color: #999;
+}
+fieldset, img {
+	border:0;
+}
+header img {
+	vertical-align: middle;
+}
+.post img, table.legend img {
+	max-width: 100%;
+	display: block;
+}
+div.page {
+	max-width: 864px;
+	width: 80%;
+	text-align: left;
+	margin: 1em auto;
+}
+.lower {
+	text-transform: lowercase;
+}
+.upper {
+	text-transform: uppercase;
+}
+div.post {
+	border: .3em solid #ddd;
+	border-width: 0 0 .3em 0;
+	padding: 1em 0 0 0;
+	line-height: 1.6em;
+}
+div.post:last-child {
+	border: 0;
+	margin-bottom: 2em;
+}
+.m1 .vote {
+	color: #a33;
+}
+.p1 .vote {
+	color: #3a3;
+}
+a[title='upvote'], a[title='downvote'] {
+}
+.vote {
+	position: relative;
+	float: left;
+	margin: 0 .5em 0 0;
+	color: #bbb;
+}
+.container {
+
+}
+.container:after {
+	content: ' ';
+	clear: both;
+	display: block;
+}
+.col {
+	width: 50%;
+	float: left;
+}
+.copy {
+	text-align: center;
+	color: #666;
+}
+@media (max-width: 768px) {
+	div.page { width: 95%; }
+}
+@media print {
+* {
+	text-shadow: none !important;
+	color: #000 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}}
