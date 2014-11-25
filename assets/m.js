@@ -336,6 +336,7 @@ function vlinks(e) {
 
 function mods(e) {
 	var id = e.getAttribute('id');
+	var m = e.querySelectorAll('.meta')[0];
 	if ( votes[id] != undefined ) {
 		if ( votes[id] === '0' ) {
 			e.className += ' self';
@@ -344,8 +345,8 @@ function mods(e) {
 		} else {
 			e.className += ' m1';
 		}
-	} else if ( edits[id] != undefined ) {
-		var m = e.querySelectorAll('.meta')[0];
+	}
+	if ( edits[id] != undefined ) {
 		e.className += ' self';
 		m.innerHTML += "&emsp;( <a href='?id="+ id +"&auth="+ edits[id] +"'>edit</a> )";
 	}
