@@ -81,6 +81,7 @@ a:hover, .func a, .meta a {
 	color: #77e;
 }
 .meta {
+	color: #888;
 	font-weight: 600;
 }
 .func  {
@@ -261,7 +262,7 @@ select, input, button, textarea, button {
 	font-size: 99%;
 }
 textarea {
-	overflow: auto;
+	overflow: visible;
 }
 input[type="text"], input[type="search"], textarea {
 	border: 1px solid #bbb;
