@@ -12,7 +12,7 @@ class Router  {
 		':id'		=> '(?P<id>[1-9][0-9]*)',
 		':key'		=> '(?P<key>[0-9a-z]*)',
 		':num'		=> '(?P<num>[0-9]*)',
-		':auth'		=> '(?P<auth>[0-9a-f\.]{20})',
+		':auth'		=> '(?P<auth>[0-9a-f\.]*)', // Was '(?P<auth>[0-9a-f\.]{20})'
 		':act'		=> '(?P<act>read|edit|delete|flag|lock)',
 		':tag'		=> '(?P<tag>[\pL\pN\s_,-]{3,100})',
 		':page'		=> '(?P<page>[1-9][0-9]*)',
