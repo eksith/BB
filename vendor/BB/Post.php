@@ -26,11 +26,15 @@ class Post extends Data {
 	
 	public $reply_count	= 0;
 	
+	public $thread_replies	= 0;
+	
 	public $quality;
 	
 	public $auth_key;
 	
 	public $topic_status;
+	
+	public $parent_status;
 	
 	public $status;
 	
@@ -57,7 +61,7 @@ class Post extends Data {
 	}
 	
 	public static function getInfo( $id ) {
-		$sql	= "SELECT created_at, auth_key FROM posts WHERE id = :id";
+		$sql	= "SELECT title, created_at, auth_key FROM posts WHERE id = :id";
 		
 		parent::init();
 		$stmt	= self::$db->prepare( $sql );
@@ -66,13 +70,21 @@ class Post extends Data {
 		return $stmt->fetch();
 	}
 	
-	public static function getPosts( $id = 0, $page = 1, $thread = true, $raw = false ) {
+	public static function getPosts( 
+		$id = 0, 
+		$page = 1, 
+		$thread = true, 
+		$raw = false, 
+		$new = false 
+	) {
 		$params	= array();
 		$sql	= "SELECT p.id AS id, p.title AS title, p.created_at AS created_at, 
 				p.reply_count AS reply_count, 
 				parent.title AS parent_title, 
-				parent.status AS topic_status, 
+				parent.status AS parent_status, 
 				parent.reply_at AS last_reply, 
+				root.reply_count AS thread_replies, 
+				root.status AS topic_status, 
 				posts_family.root_id AS root_id, 
 				posts_family.parent_id AS parent_id";
 		
@@ -88,18 +100,31 @@ class Post extends Data {
 		
 		$sql .= " FROM posts AS p
 				INNER JOIN posts_family ON p.id = posts_family.child_id 
-				LEFT JOIN posts AS parent ON posts_family.parent_id = parent.id";
+				LEFT JOIN posts AS parent ON posts_family.parent_id = parent.id 
+				LEFT JOIN posts AS root ON posts_family.root_id = root.id";
 		
 		if ( $thread && $id > 0) {	// Viewing thread
 			$params[':root_id'] = $id;
-			$sql .= ' WHERE posts_family.root_id = :root_id ORDER BY id ASC';
+			$sql .= ' WHERE posts_family.root_id = :root_id';
+			if ( $new ) {
+				$sql .= ' AND p.status > -1';
+			} else { 
+				$sql .= ' AND p.status > 1';
+			}
+			$sql .= ' ORDER BY id ASC';
 			
 		} elseif ( $id > 0 ) {		// Viewing a single post
 			$params[':id'] = $id;
 			$sql .= ' WHERE p.id = :id';
 			
 		} else {			// Viewing thread
-			$sql .= ' WHERE posts_family.root_id = p.id ORDER BY id DESC';
+			$sql .= ' WHERE posts_family.root_id = p.id';
+			if ( $new ) {
+				$sql .= ' AND p.status > -1';
+			} else { 
+				$sql .= ' AND p.status > 1';
+			}
+			$sql .= ' ORDER BY id DESC';
 		}
 		
 		$params[':limit']	= ( $id > 0 )? POST_LIMIT : TOPIC_LIMIT;
@@ -129,6 +154,9 @@ class Post extends Data {
 		
 		if ( empty( $this->title ) || '' == $this->title ) {
 			$this->title = self::smartTrim( $this->plain, 60 );
+		} else {
+			$this->title = Microthread\Html::entities( $this->title );
+			$this->title = self::smartTrim( $this->title, 60 );
 		}
 		
 		$params = array(
@@ -215,16 +243,19 @@ class Post extends Data {
 	}
 	
 	private function saveFamily() {
-		$sql	 = 'INSERT INTO posts_family ( root_id, parent_id, child_id ) VALUES ( :r, :p, :i );';
+		$sql	 = "INSERT INTO posts_family ( root_id, parent_id, child_id ) 
+				VALUES ( :r, :p, :i );";
 		
-		if ( empty( $this->root_id ) && empty( $this->parent_id ) ) {	// This is a new thread
+		// This is a new thread
+		if ( empty( $this->root_id ) && empty( $this->parent_id ) ) {
 			$params	= array(
 					':r' => $this->id,
 					':p' => $this->id,
 					':i' => $this->id
 				);
 		
-		} elseif ( empty( $this->parent_id ) ) {	// Reply to the root post
+		// Reply to the root post
+		} elseif ( empty( $this->parent_id ) ) {
 			$params	= array(
 					':r' => $this->root_id,
 					':p' => $this->id,
