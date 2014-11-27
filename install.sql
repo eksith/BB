@@ -3,7 +3,7 @@ CREATE TABLE posts (
 	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
 	title TEXT NOT NULL, 
 	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	updated_at DATETIME DEFAULT NULL,  
+	updated_at DATETIME DEFAULT NULL, 
 	reply_at DATETIME DEFAULT NULL, 
 	summary TEXT NOT NULL, 
 	plain TEXT NOT NULL, 
@@ -12,7 +12,8 @@ CREATE TABLE posts (
 	reply_count INTEGER NOT NULL DEFAULT 0, 
 	quality FLOAT NOT NULL DEFAULT 0, 
 	status INTEGER NOT NULL DEFAULT 0, 
-	auth_key VARCHAR NOT NULL
+	auth_key VARCHAR NOT NULL,
+	ip VARCHAR PRIMARY KEY NOT NULL
 );
 
 CREATE INDEX idx_posts_on_created_at ON posts ( created_at );
@@ -20,6 +21,7 @@ CREATE INDEX idx_posts_on_updated_at ON posts ( updated_at );
 CREATE INDEX idx_posts_on_reply_at ON posts ( reply_at );
 CREATE INDEX idx_posts_on_quality ON posts ( quality );
 CREATE INDEX idx_posts_on_status ON posts ( status );
+CREATE INDEX idx_posts_on_ip ON posts ( ip );
 
 CREATE VIRTUAL TABLE posts_search USING fts4 ( search_data );
 
