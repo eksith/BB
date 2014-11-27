@@ -79,7 +79,7 @@ function determineIP() {
 		return $_SERVER["REMOTE_ADDR"];
 	}
 }
-
+// Need to move this to the database
 function blocked() {
 	$ip = determineIp();
 	$b  = file( BLOCKLIST, FILE_SKIP_EMPTY_LINES );
