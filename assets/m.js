@@ -284,7 +284,7 @@ function vote(e, v) {
 	var u;
 	
 	if ( v == 1 ) {
-		u = '/?id='+i+'&vote=1';
+		u = '/vote/'+i+'/up';
 		ajax( u, 'text', function( r ) {
 			if ( r == 'problem' ) {
 				c.innerHTML = 'E';
@@ -294,7 +294,7 @@ function vote(e, v) {
 			}
 		});
 	} else {
-		u = '/?id='+i+'&vote=-1';
+		u = '/vote/'+i+'/down';
 		ajax( u, 'text', function( r ) {
 			if ( r == 'problem' ) {
 				c.innerHTML = 'E';
