@@ -107,7 +107,7 @@ class Post extends Data {
 			$params[':root_id'] = $id;
 			$sql .= ' WHERE posts_family.root_id = :root_id';
 			if ( $new ) {
-				$sql .= ' AND p.status > -1';
+				$sql .= ' AND p.status > 0';
 			} else { 
 				$sql .= ' AND p.status > 1';
 			}
@@ -120,7 +120,7 @@ class Post extends Data {
 		} else {			// Viewing thread
 			$sql .= ' WHERE posts_family.root_id = p.id';
 			if ( $new ) {
-				$sql .= ' AND p.status > -1';
+				$sql .= ' AND p.status > 0';
 			} else { 
 				$sql .= ' AND p.status > 1';
 			}
