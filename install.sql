@@ -43,6 +43,18 @@ CREATE TABLE post_votes(
 CREATE INDEX idx_post_votes_on_created_at ON post_votes ( created_at );
 
 
+CREATE TABLE firewall(
+	ip VARCHAR PRIMARY KEY NOT NULL, 
+	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	expires_at DATETIME DEFAULT NULL, 
+	response INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_banned_on_created_at ON banned ( created_at );
+CREATE INDEX idx_banned_on_expires_at ON banned ( expires_at );
+
+
+
 CREATE TRIGGER post_after_insert AFTER INSERT ON posts FOR EACH ROW 
 BEGIN
 	INSERT INTO posts_search ( docid, search_data ) VALUES ( NEW.rowid, NEW.plain );
