@@ -45,58 +45,7 @@ spl_autoload_register( function( $class ) {
 	spl_autoload( str_replace( "\\", "/", $class ) );
 });
 
-
-function checkIp( $ip ) {
-	return ( filter_var( $ip, 
-			FILTER_VALIDATE_IP | 
-			FILTER_FLAG_IPV4 | 
-			FILTER_FLAG_IPV6 | 
-			FILTER_FLAG_NO_PRIV_RANGE | 
-			FILTER_FLAG_NO_RES_RANGE ) ) ? true : false;
-}
-
-// Adapted from :
-// http://www.grantburton.com/2008/11/30/fix-for-incorrect-ip-addresses-in-wordpress-comments/
-function determineIP() {
-	if ( checkIp( $_SERVER["HTTP_CLIENT_IP"] ) {
-		return $_SERVER["HTTP_CLIENT_IP"];
-	}
-	foreach ( explode(',', $_SERVER["HTTP_X_FORWARDED_FOR"] ) as $ip) {
-		if ( checkIP( trim( $ip ) ) ) {
-			return $ip;
-		}
-
-	}
-	if ( checkIP( $_SERVER["HTTP_X_FORWARDED"] ) ) {
-		return $_SERVER["HTTP_X_FORWARDED"];
-	} elseif ( checkIP( $_SERVER["HTTP_X_CLUSTER_CLIENT_IP"] ) ) {
-		return $_SERVER["HTTP_X_CLUSTER_CLIENT_IP"];
-	} elseif ( checkIP( $_SERVER["HTTP_FORWARDED_FOR"] ) ) {
-		return $_SERVER["HTTP_FORWARDED_FOR"];
-	} elseif ( checkIP( $_SERVER["HTTP_FORWARDED"] ) ) {
-		return $_SERVER["HTTP_FORWARDED"];
-	} else {
-		return $_SERVER["REMOTE_ADDR"];
-	}
-}
-// Need to move this to the database
-function blocked() {
-	$ip = determineIp();
-	$b  = file( BLOCKLIST, FILE_SKIP_EMPTY_LINES );
-	foreach( $b as $e ) {
-		if ( strstr( $ip, $e, true ) ) {
-			return true;
-		}
-	}
-	
-	return false;
-}
-
-if ( blocked() ) {
-	die();
-} else {
-	var_dump( determineIP() );
-}
+new BB\Firewall();
 
 require ( 'functions.php' );
 
@@ -117,3 +66,4 @@ $routes 	= array(
 
 $router = new BB\Router();
 $router->route( $routes );
+
