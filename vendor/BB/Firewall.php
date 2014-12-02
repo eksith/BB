@@ -29,7 +29,7 @@ class Firewall extends Data {
 	public function remove( $ip ) {
 		$ips	= array_map( "inet_pton", explode( ',', $ip ) );
 		$params	= array();
-		$ins	= ''
+		$ins	= '';
 		for ( $i = 0; $i < count( $params ); $i++ ) {
 			$ins		.= ':p' . $i . ',';
 			$params[':p' . $i] = $ips[$i];
