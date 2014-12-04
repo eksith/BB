@@ -1,6 +1,6 @@
 <?php
 /**
- * Post flush resource intensive operations queue
+ * Queuing for time consuming operations after content has been sent to the user
  *
  * @author Eksith Rodrigo <reksith at gmail.com>
  * @license http://opensource.org/licenses/ISC ISC License
