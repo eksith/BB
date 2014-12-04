@@ -24,8 +24,6 @@ define( 'AUTO_LOCK',	8 );	// Automatically close topics after this many days of 
 // Hashed admin password ( default is 'password' ) Not doing anything yet
 define( 'ADMIN', 	'8d04e70695d4cf206099501be404e0e6.85adf6bf85ca4fc7ef8b04b5cbf04f5b2b0107a9' );
 
-define( 'BLOCKLIST',		'data\blocklist.txt' );
-
 
 
 /**
