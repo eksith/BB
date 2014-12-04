@@ -84,7 +84,7 @@ END;
 CREATE TRIGGER post_vote_after_insert AFTER INSERT ON post_votes FOR EACH ROW
 BEGIN
 	UPDATE posts SET quality = ROUND( 
-		( quality - ( 1 / strftime( '%s', 'now' ) - strftime( '%s', created_at ) ) ), 4
+		( quality + ( NEW.vote / strftime( '%s', 'now' ) - strftime( '%s', created_at ) ) ), 4
 	) WHERE id = NEW.post_id AND NEW.session_id NOT IN ( 
 		SELECT session_id FROM post_votes WHERE post_votes.post_id = NEW.post_id
 	);
