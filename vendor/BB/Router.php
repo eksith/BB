@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * Forum path->function router
+ *
+ * @author Eksith Rodrigo <reksith at gmail.com>
+ * @license http://opensource.org/licenses/ISC ISC License
+ * @version 0.1
+ */
 namespace BB;
 
 class Router  {
