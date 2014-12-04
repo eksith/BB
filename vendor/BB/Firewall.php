@@ -1,4 +1,11 @@
 <?php
+/**
+ * Basic ip blocking protection
+ *
+ * @author Eksith Rodrigo <reksith at gmail.com>
+ * @license http://opensource.org/licenses/ISC ISC License
+ * @version 0.1
+ */
 namespace BB;
 
 class Firewall extends Data {
