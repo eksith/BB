@@ -24,7 +24,12 @@ function formatNav( $url, $text ) {
 	return "<li><a href='{$url}'>{$text}</a></li>";
 }
 
-function pagination( $thread, $id, $page, $posts ) {
+function pagination( 
+	$thread, 
+	$id, 
+	$page, 
+	$posts 
+) {
 	$out	= "<nav class='page'><ul>";
 	$amt	= count( $posts );
 	if ( !$amt ) {
@@ -75,7 +80,12 @@ function pagination( $thread, $id, $page, $posts ) {
 	echo $out . '</ul></nav>';
 }
 
-function printPosts( $thread, $id, $canEdit, $posts ) {
+function printPosts( 
+	$thread, 
+	$id, 
+	$canEdit, 
+	$posts 
+) {
 	if ( $thread === 0 ) {
 		if ( $id === 0 ) {
 			printIndex( $posts );
@@ -113,7 +123,13 @@ function printJS() {
  Helpers
  ***/
 
-function initPost( $title, $body, $root, $parent, $id = 0 ) {
+function initPost( 
+	$title, 
+	$body, 
+	$root, 
+	$parent, 
+	$id = 0 
+) {
 	$post = new BB\Post();
 	$post->title		= $title;
 	$post->raw 		= $body;
@@ -416,7 +432,12 @@ function field( $key ) {
 	return hash( 'tiger160,4', $key . requestKey() );
 }
 
-function fromArray( $array, $key, $default, $hash = false ) {
+function fromArray( 
+	$array, 
+	$key, 
+	$default, 
+	$hash = false 
+) {
 	if  ( $hash ) {
 		$key = field( $key );
 	}
