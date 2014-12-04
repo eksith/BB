@@ -48,6 +48,7 @@ spl_autoload_register( function( $class ) {
 new BB\Firewall();
 
 require ( 'functions.php' );
+require ( 'routes.php' );
 
 $routes 	= array(
 	''			=> 'index',
@@ -67,3 +68,4 @@ $routes 	= array(
 $router = new BB\Router();
 $router->route( $routes );
 
+housekeeping();
