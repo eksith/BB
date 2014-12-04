@@ -2,6 +2,8 @@
 namespace BB;
 
 class Post extends Data {
+	const TITLE_LENGTH	= 60;
+	
 	public $root_id		= 0;
 	
 	public $parent_id	= 0;
@@ -103,7 +105,7 @@ class Post extends Data {
 				LEFT JOIN posts AS parent ON posts_family.parent_id = parent.id 
 				LEFT JOIN posts AS root ON posts_family.root_id = root.id";
 		
-		if ( $thread && $id > 0) {	// Viewing thread
+		if ( $thread && $id > 0 ) {	// Viewing thread
 			$params[':root_id'] = $id;
 			$sql .= ' WHERE posts_family.root_id = :root_id';
 			if ( $new ) {
@@ -136,7 +138,7 @@ class Post extends Data {
 		$stmt	= self::$db->prepare( $sql );
 		$stmt->execute( $params );
 		
-		return $stmt->fetchAll( \PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE, 'BB\Post' );
+		return $stmt->fetchAll( \PDO::FETCH_CLASS, 'BB\Post' );
 	}
 	
 	/**
@@ -152,11 +154,11 @@ class Post extends Data {
 		$this->body	= $html->filter( $this->raw );
 		$this->auth_key	= $auth;
 		
-		if ( empty( $this->title ) || '' == $this->title ) {
-			$this->title = self::smartTrim( $this->plain, 60 );
+		if ( empty( $this->title ) || '' == trim( $this->title ) ) {
+			$this->title = self::smartTrim( $this->plain, self::TITLE_LENGTH );
 		} else {
 			$this->title = Microthread\Html::entities( $this->title );
-			$this->title = self::smartTrim( $this->title, 60 );
+			$this->title = self::smartTrim( $this->title, self::TITLE_LENGTH );
 		}
 		
 		$params = array(
@@ -299,24 +301,5 @@ class Post extends Data {
 		}
 		
 		return $out;
-	}
-	
-	private function extractTitle( $body, $smax = 60, $smin = 5 ) {
-		$body = trim( $body );
-		
-		if ( empty( $body ) || mb_strlen( $body ) < $smax ) {
-			return $body;
-		}
-		$body = \Microthread\Html::plainText( $body );
-		
-		$i = strpos( $body, "\n" );
-		$i--;
-		if ( $i < $smin || $i > $smax ) {
-			$i = strpos( $body, "." );
-		}
-		if ( false === $i || $i < $smin || $i > $smax ) {
-			$i = $smax;
-		}
-		return mb_substr( $body, 0, $i );
 	}
 }
