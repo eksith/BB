@@ -4,12 +4,11 @@
  *
  * @author Eksith Rodrigo <reksith at gmail.com>
  * @license http://opensource.org/licenses/ISC ISC License
- * @version 0.1
+ * @version 0.2
  */
 namespace BB;
 
-class Router  {
-	
+class Router extends Observable {
 	/**
 	 * @var array Substitute markers for path regular expressions
 	 */
@@ -25,16 +24,14 @@ class Router  {
 		':vote'		=> '(?P<vote>up|down)'
 	);
 	
-	public function __construct() {}
-	
-	public function route( $map ) {
-		if ( !isset( $map ) || !is_array( $map ) ) {
-			return null;
+	public function __construct( $map = array() ) {
+		if ( empty( $map ) ) {
+			return;
 		}
 		
 		$k	= array_keys( self::$pathMarkers );
 		$v	= array_values( self::$pathMarkers );
-	
+		
 		/**
 		 * Sort to ensure first match
 		 */
@@ -45,12 +42,12 @@ class Router  {
 		 * Request route data
 		 */
 		$path	= $_SERVER['REQUEST_URI'];
-		
+				
 		/**
 		 * Request arguments
 		 */
 		$args	= array();
-		$found	= false;
+		$routes	= array();
 		foreach ( $map as $pattern => $sendTo ) {
 			/**
 			 * Regex formatting clean up
@@ -60,23 +57,35 @@ class Router  {
 			$regex = '@^/' . $regex . '/?$@i';
 			
 			if ( preg_match( $regex, $path, $matches ) ) {
-				$found		= true;
-				$args		= filterMatches( $matches );
-				
-				if ( is_callable( $sendTo, true ) ) {
-					call_user_func_array( $sendTo, $args );
-				}
+				$m		= filterMatches( $matches );
+				$args[]		= $m;
+				$routes[]	= $sendTo;
 				
 				// All match is special. We can keep going
-				if ( isset( $args['all'] ) ) {
+				if ( isset( $m['all'] ) ) {
 					continue;
 				}
 				break;
 			}
 		}
 		
-		if ( !$found ) {
+		if ( empty( $routes ) ) {
 			$this->notFound();
+		} else {
+			$this->args = $args;
+			foreach( $routes as $route ) {
+				$this->route( $route );
+			}
+			$this->notify();
+		}
+	}
+	
+	private function route( $sendTo, $args ) {
+		if ( is_callable( $sendTo, true ) ) {
+			call_user_func_array( $sendTo, $args );
+		} else {
+			$observer = new 'Controllers\\' . $sendTo;
+			$this->attach( $observer );
 		}
 	}
 	
