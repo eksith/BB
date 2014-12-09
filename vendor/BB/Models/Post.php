@@ -41,6 +41,18 @@ class Post extends Data {
 	
 	public function __construct() {}
 	
+	public function hasReplies() {
+		return ( $this->reply_count > 0 )? true : false;
+	}
+	
+	public function isRoot() {
+		return ( $this-> id == $this->root_id )? true : false;
+	}
+	
+	public function isParent() {
+		return ( $this-> id == $this->parent_id )? true : false;
+	}
+	
 	public function update( \SplSubject $subject, $args ) {
 		$params = $this->buildParams();
 		if ( empty( $params ) ) {
