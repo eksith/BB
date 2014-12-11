@@ -14,9 +14,11 @@ class ControllerLoader {
 		$this->controllers = array_merge( $this->controllers, $controllers );
 	}
 	
-	public function load( \SplSubject $router ) {
+	public function load( \SplSubject $router, $args ) {
 		foreach( $this->controllers as $controller ) {
 			$class = new $controller;
+			
+			$class->setArgs( $args );
 			$router->attach( $class );
 		}
 	}
