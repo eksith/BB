@@ -40,3 +40,7 @@ $routes 	= array(
 	'tags/:tag/:page'	=> 'Tag',
 	'vote/:id/:vote'	=> 'Posts'
 );
+
+
+$router = new BB\Router();
+$router->route( $routes );
