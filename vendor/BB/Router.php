@@ -84,8 +84,13 @@ class Router extends Observable {
 		if ( is_callable( $sendTo, true ) ) {
 			call_user_func_array( $sendTo, $args );
 		} else {
-			$observer = new 'Controllers\\' . $sendTo;
-			$this->attach( $observer );
+			$loader = new \BB\Controllers\ControllerLoader;
+			if ( is_array( $sendTo ) ) {
+				$loader->append( $sendTo );
+			} else {
+				$loader->append( array( $sendTo ) );
+			}
+			$loader->load( $this );
 		}
 	}
 	
