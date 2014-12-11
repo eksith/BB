@@ -3,9 +3,18 @@ namespace BB\Controllers;
 use BB\Models;
 
 abstract class Controller implements \SplObserver {
-	public static $output = array();
+	public static $outpu	= array();
+	public $args		= array();
 	
 	abstract public function update( \SplSubject $subject );
+	
+	protected function method() {
+		return strtolower( $_SERVER['REQUEST_METHOD'] );
+	}
+	
+	public function setArgs( $args ) {
+		$this->args = $args;
+	}
 
 	/***
 	Security and privileges
