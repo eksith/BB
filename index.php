@@ -16,6 +16,3 @@ session_start();
 define( 'PATH',		realpath( dirname( __FILE__ ) ) . '/' );
 
 require( PATH . 'vendor/bootstrap.php' );
-
-$router = new BB\Router();
-$router->route( $routes );
