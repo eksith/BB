@@ -5,6 +5,10 @@ namespace BB\Models;
 class Post extends Data {
 	const TITLE_LENGTH	= 60;
 	
+	const ERROR_NOTFOUND	= 0;
+	
+	const ERROR_STORAGE	= 1;
+	
 	const POST_LIMIT	= 30;
 	
 	const TOPIC_LIMIT	= 60;
@@ -55,9 +59,6 @@ class Post extends Data {
 	
 	public function update( \SplSubject $subject, $args ) {
 		$params = $this->buildParams();
-		if ( empty( $params ) ) {
-			return false;
-		}
 		
 		if ( isset( $this->id ) ) {
 			return parent::edit( 'posts', $params, array( 'id' => $this->id ) );
@@ -93,12 +94,16 @@ class Post extends Data {
 			$fetch			= 'classList';
 			$order			= ' id ASC';
 			
-		} elseif ( isset( $filter['id'] ) ) {
+		} elseif ( isset( $filter['id'] ) || isset( $filter['edit'] ) ) {
+			if ( isset( $filter['edit'] ) ) {
+				$params['id']		= $filter['edit'];
+				$sql			.= ', p.raw AS raw';
+			} else {
+				$params['id']		= $filter['id'];
+				$sql			.= ', p.body AS body';
+			}
 			$where			.= 'p.id = :id';
-			$sql			.= ', p.body AS body';
-			$params['id']		= $filter['id'];
 			$fetch			= 'class';
-			$order			= ' id ASC';
 			
 		} else {
 			$where			.= 'posts_family.root_id = p.id';
@@ -118,6 +123,10 @@ class Post extends Data {
 				LEFT JOIN posts AS parent ON posts_family.parent_id = parent.id 
 				LEFT JOIN posts AS root ON posts_family.root_id = root.id $where";
 		
+		if ( isset( $filter['id'] ) || isset( $filter['edit'] ) ) {
+			return parent::find( $sql . ';', $params, 'class' );
+		}
+		
 		$params['limit']	= ( isset( $filter['thread'] ) )? 
 						self::POST_LIMIT : self::TOPIC_LIMIT;
 						
@@ -126,7 +135,11 @@ class Post extends Data {
 		
 		$sql	.= " $order LIMIT :limit OFFSET :offset;";
 		
-		return parent::find( $sql, $params, 'classList' );
+		$posts	= parent::find( $sql, $params, 'classList' );
+		if ( count( $posts ) ) {
+			return $posts;
+		}
+		return self::ERROR_NOTFOUND;
 	}
 	
 	public static function delete( $id, $permanent = false ) {
