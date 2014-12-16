@@ -4,11 +4,12 @@
  *
  * @author Eksith Rodrigo <reksith at gmail.com>
  * @license http://opensource.org/licenses/ISC ISC License
- * @version 0.2
+ * @version 0.1
  */
 namespace BB;
 
-class Router extends Observable {
+class Router  {
+	
 	/**
 	 * @var array Substitute markers for path regular expressions
 	 */
@@ -24,14 +25,16 @@ class Router extends Observable {
 		':vote'		=> '(?P<vote>up|down)'
 	);
 	
-	public function __construct( $map = array() ) {
-		if ( empty( $map ) ) {
-			return;
+	public function __construct() {}
+	
+	public function route( $map ) {
+		if ( !isset( $map ) || !is_array( $map ) ) {
+			return null;
 		}
 		
 		$k	= array_keys( self::$pathMarkers );
 		$v	= array_values( self::$pathMarkers );
-		
+	
 		/**
 		 * Sort to ensure first match
 		 */
@@ -42,12 +45,12 @@ class Router extends Observable {
 		 * Request route data
 		 */
 		$path	= $_SERVER['REQUEST_URI'];
-				
+		
 		/**
 		 * Request arguments
 		 */
 		$args	= array();
-		$routes	= array();
+		$found	= false;
 		foreach ( $map as $pattern => $sendTo ) {
 			/**
 			 * Regex formatting clean up
@@ -57,40 +60,23 @@ class Router extends Observable {
 			$regex = '@^/' . $regex . '/?$@i';
 			
 			if ( preg_match( $regex, $path, $matches ) ) {
-				$m		= filterMatches( $matches );
-				$args[]		= $m;
-				$routes[]	= $sendTo;
+				$found		= true;
+				$args		= filterMatches( $matches );
+				
+				if ( is_callable( $sendTo, true ) ) {
+					call_user_func_array( $sendTo, $args );
+				}
 				
 				// All match is special. We can keep going
-				if ( isset( $m['all'] ) ) {
+				if ( isset( $args['all'] ) ) {
 					continue;
 				}
 				break;
 			}
 		}
 		
-		if ( empty( $routes ) ) {
+		if ( !$found ) {
 			$this->notFound();
-		} else {
-			$this->args = $args;
-			foreach( $routes as $route ) {
-				$this->route( $route );
-			}
-			$this->notify();
-		}
-	}
-	
-	private function route( $sendTo, $args ) {
-		if ( is_callable( $sendTo, true ) ) {
-			call_user_func_array( $sendTo, $args );
-		} else {
-			$loader = new \BB\Controllers\ControllerLoader;
-			if ( is_array( $sendTo ) ) {
-				$loader->append( $sendTo );
-			} else {
-				$loader->append( array( $sendTo ) );
-			}
-			$loader->load( $this );
 		}
 	}
 	
