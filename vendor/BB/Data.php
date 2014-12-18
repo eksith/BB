@@ -2,8 +2,30 @@
 namespace BB;
 
 class Data {
+	
+	/**
+	 * @var int Unique identifyer
+	 */
 	public $id		= 0;
 	
+	/**
+	 * @var int Content status
+	 */
+	public $status		= 0;
+	
+	/**
+	 * @var date Created date (set by the database upon row add)
+	 */
+	public $created_at;
+	
+	/**
+	 * @var date Last updated date (set by the database upon row update)
+	 */
+	public $updated_at;
+	
+	/**
+	 * @var object PDO connection object
+	 */
 	protected static $db = null;
 	
 	public static function init() {
