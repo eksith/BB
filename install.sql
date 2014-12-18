@@ -76,7 +76,7 @@ END;
 CREATE TRIGGER post_family_after_insert AFTER INSERT ON posts_family FOR EACH ROW 
 BEGIN
 	UPDATE posts SET reply_count = ( reply_count + 1 ), reply_at = CURRENT_TIMESTAMP 
-		WHERE id = NEW.parent_id;
+		WHERE id = NEW.root_id OR id = NEW.parent_id;
 END;
 
 
