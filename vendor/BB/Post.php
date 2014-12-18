@@ -1,3 +1,4 @@
+<?php
 /**
  * Basic forum post.
  *
@@ -105,15 +106,15 @@ class Post extends Data {
 	}
 	
 	public function hasReplies() {
-		return ( $this->reply_count > 0 )? true : false;
+		return ( $this->reply_count > 0 ) ? true : false;
 	}
 	
 	public function isRoot() {
-		return ( $this-> id == $this->root_id )? true : false;
+		return ( $this->id == $this->root_id ) ? true : false;
 	}
 	
 	public function isParent() {
-		return ( $this-> id == $this->parent_id )? true : false;
+		return ( $this->id == $this->parent_id ) ? true : false;
 	}
 	
 	public static function getInfo( $id ) {
@@ -133,7 +134,7 @@ class Post extends Data {
 	
 	public static function find( $filter = array() ) {
 		$params	= array();
-		$id	= 0;
+		$result	= new Thread();
 		$order	= ' ORDER BY ';
 		$sql	=
 			"SELECT p.id AS id, p.title AS title, p.created_at AS created_at, 
@@ -150,6 +151,7 @@ class Post extends Data {
 			LEFT JOIN posts AS root ON posts_family.root_id = root.id";
 		
 		if ( isset( $filter['id'] ) || isset( $filter['edit'] ) ) {
+			$id		= 0;
 			if ( isset( $filter['id'] ) ) {
 				$sql	.= ', p.body AS body';
 				$id	= $filter['id'];
@@ -163,10 +165,17 @@ class Post extends Data {
 			$from	.= ' WHERE p.id = :id';
 			$order	.= 'id DESC';
 			
-		} elseif ( $isset( $filter['thread'] ) ) {
-			$params[':root_id'] = $id;
-			$sql .= ', p.body AS body';
-			$from	.= ' WHERE posts_family.root_id = :root_id';
+		} elseif ( isset( $filter['thread'] ) || isset( $filter['sub'] ) ) {
+			if ( isset( $filter['sub'] ) ) {
+				$params[':parent_id'] = $filter['sub'];
+				$from	.= ' WHERE posts_family.parent_id = :parent_id';
+				
+			} elseif( isset( $filter['thread'] ) ) {
+				$params[':root_id'] = $filter['thread'];
+				$from	.= ' WHERE posts_family.root_id = :root_id';
+			}
+			
+			$sql	.= ', p.body AS body';
 			$order	.= 'id ASC';
 			
 		} else {
@@ -184,23 +193,42 @@ class Post extends Data {
 		
 		// No need for limits if this is a single post
 		if ( isset( $filter['id'] ) || isset( $filter['edit'] ) ) {
-			$this->posts_limit	= 1;
 			$sql			.= ';';
 			
 		} else {
-			$page	= ( isset( $filter['page'] ) ) ? ( $filter['page'] ) : 1;
-		
-			$this->posts_limit	= ( $id > 0 ) ? self::POST_LIMIT : self::TOPIC_LIMIT;
+			$page			= ( isset( $filter['page'] ) ) ? 
+							( $filter['page'] ) : 1;
+			$thread->page		= $page;
+			$thread->limit		= ( $id > 0 ) ? self::POST_LIMIT : self::TOPIC_LIMIT;
+			
 			$params[':limit']	= $this->posts_limit;
 			$params[':offset']	= ( $page - 1 ) * $params[':limit'];
 		
 			$sql	.= ' LIMIT :limit OFFSET :offset;';
 		}
+		
 		parent::init();
 		$stmt	= self::$db->prepare( $sql );
 		$stmt->execute( $params );
 		
-		return $stmt->fetchAll( \PDO::FETCH_CLASS, 'BB\Post' );
+		
+		if ( isset( $filter['id'] ) || isset( $filter['edit'] ) ) {
+			return $stmt->fetchAll( \PDO::FETCH_CLASS, 'BB\Post' )[0];
+		}
+		
+		if ( isset( $filter['thread'] ) ) {
+			$result->id		= $filter['thread'];
+		}
+		
+		while( $row = $stmt->fetch( \PDO::FETCH_CLASS, 'BB\Post' ) ) {
+			if ( isset( $filter['sub'] ) {
+				$result->parent_id = $row->parent_id;
+			} else {
+				$result->parent_id = $row->root_id;
+			}
+			$result->add( $row );
+		}
+		return $result;
 	}
 	
 	/**
@@ -211,22 +239,24 @@ class Post extends Data {
 		$this->filterProperties();
 		
 		$params = array(
-			':t'	=> $this->title, 
-			':b'	=> $this->body, 
-			':r'	=> $this->raw,
-			':p'	=> $this->plain,
-			':s'	=> $this->summary,
-			':a'	=> $auth
+			':title'	=> $this->title, 
+			':body'		=> $this->body, 
+			':raw'		=> $this->raw,
+			':plain'	=> $this->plain,
+			':summary'	=> $this->summary,
+			':status'	=> $this->status,
+			':auth'		=> $auth
 		);
 		
 		if ( $edit ) { // Editing an existing post
 			$params[':id'] = $this->id;
-			$sql = "UPDATE posts SET title = :t, body = :b, raw = :r, plain = :p, 
-					summary = :s, auth_key = :a WHERE id = :id;";
+			$sql = "UPDATE posts SET title = :title, body = :body, raw = :raw, 
+					plain = :plain, summary = :summary, status = :status, 
+					auth_key = :auth WHERE id = :id;";
 		
 		} else {	// Creating a new post
-			$sql = "INSERT INTO posts ( title, body, raw, plain, summary, auth_key ) 
-				VALUES ( :t, :b, :r, :p, :s, :a );";
+			$sql = "INSERT INTO posts ( title, body, raw, plain, summary, status, auth_key ) 
+				VALUES ( :title, :body, :raw, :plain, :summary, :status, :auth );";
 		}
 		
 		parent::init();
@@ -251,65 +281,66 @@ class Post extends Data {
 	
 	public static function delete( $id, $permanant = false ) {
 		if ( $permanant ) {
-			$sql	= 'DELETE FROM posts WHERE id = :i;';
+			$sql	= 'DELETE FROM posts WHERE id = :id;';
 		} else {
-			$sql	= 'UPDATE posts SET status = -1 WHERE id = :i;';
+			$sql	= 'UPDATE posts SET status = -1 WHERE id = :id;';
 		}
 		
 		parent::init();
 		$stmt = self::$db->prepare( $sql );
-		$stmt->execute( array( ':i' => $id ) );
+		$stmt->execute( array( ':id' => $id ) );
 	}
 	
 	public static function lockOld( $period ) {
 		$sql = "UPDATE posts SET status = 2 
-			WHERE ( julianday( 'now' ) - julianday( 'reply_at' ) ) > :p 
+			WHERE ( julianday( 'now' ) - julianday( 'reply_at' ) ) > :period 
 			AND status NOT IN ( -1, 1, 2, 99);";
 		
 		parent::init();
 		$stmt = self::$db->prepare( $sql );
-		$stmt->execute( array( ':p' => $period ) );
+		$stmt->execute( array( ':period' => $period ) );
 	}
 	
 	public static function changeStatus( $id, $status ) {
-		$sql  = 'UPDATE posts SET status = :s WHERE id = :i ;';
+		$sql  = 'UPDATE posts SET status = :status WHERE id = :id ;';
 		
 		parent::init();
 		$stmt = self::$db->prepare( $sql );
 		$stmt->execute( array(
-			':s' => $status,
-			':i' => $id
+			':status' => $status,
+			':id' => $id
 		) );
 	}
 	
 	public static function putVote( $id, $vote ) {
-		$sql  = 'INSERT INTO post_votes ( post_id, vote ) VALUES ( :p, :v );';
+		$sql  = 'INSERT INTO post_votes ( post_id, vote ) VALUES ( :parent, :vote );';
 		
 		parent::init();
 		$stmt = self::$db->prepare( $sql );
 		$stmt->execute( array(
-			':p' => $id,
-			':v' => $vote
+			':parent'	=> $id,
+			':vote'		=> $vote
 		) );
 	}
 	
 	private function saveFamily() {
 		$sql	 = "INSERT INTO posts_family ( root_id, parent_id, child_id ) 
-				VALUES ( :r, :p, :i );";
+				VALUES ( :root, :parent, :child );";
 		
 		// This is a new thread
 		if ( empty( $this->root_id ) && empty( $this->parent_id ) ) {
 			$this->root_id		= $this->id;
 			$this->parent_id	= $this->id;
+			
 		// Reply to the root post
 		} elseif ( empty( $this->parent_id ) ) {
 			$this->parent_id	= $this->id;	
 		}
 		
 		$params	= array(
-				'root_id'	=> $this->root_id,
-				'parent_id'	=> $this->parent_id,
-				'child_id'	=> $this->id
+				'root'		=> $this->root_id,
+				'parent'	=> $this->parent_id,
+				'child'		=> $this->id
 			);
 		
 		parent::init();
