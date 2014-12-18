@@ -68,7 +68,7 @@ function show(e) {
 }
 
 function tooltip(e) {
-	
+	//TODO
 }
 
 function has(e, t, c, r) {
@@ -195,63 +195,13 @@ function load(f, callback) {
 	if (f.endsWith('.js')) {
 		var s = create('script', h);
 		attr(s, 'type', 'text/javascript');
-		//s.innerHTML = ajax(f, 'text', callback);
 		attr(s, 'src', f);
 	}
 	else if (f.endsWith('.css')) {
 		var s = create('link', h);
 		attr(s, 'rel', 'stylesheet');
 		attr(s, 'type', 'text/css');
-		//s.innerHTML = ajax(f, 'text', callback);
 		attr(s, 'href', f);
-	}
-}
-
-//http://stackoverflow.com/questions/5272433/html5-form-required-attribute-set-custom-validation-message
-//http://www.raymondcamden.com/index.cfm/2012/6/14/Example-of-a-dynamic-HTML5-datalist-control
-function autocomplete(prefix, type) {
-	type = type || 'phrase';
-	var f = elements('input');
-	for (var i = 0; i < f.length; i++) {
-		if (!f[i].hasAttribute('list') && 
-			!f[i].hasAttribute('data-url')) {
-			continue;
-		}
-		var url = f[i].getAttribute('data-url');
-		var id = f[i].getAttribute('list');
-		var dl = has(id, 'item', true, true);
-		dlAuto(f[i], dl, u);
-	}
-}
-
-function hashtag(e) {
-	if ( !e.hasAttribute('data-url') ) {
-		return;
-	}
-}
-
-function dlAuto(e, dl, url) {
-	e.onchange = function() {
-		if (e.value.length < 3) {
-			return;
-		}
-		ajax(url, 'text', function(r) { 
-			dlPop(dl, r);
-		});
-	};
-}
-
-function dlPop(dl, data) {
-	if (typeof data === 'undefined' || typeof dl === 'undefined') {
-		return;
-	}
-	empty(dl);
-	var d = data.split(/\n/);
-	for (var i = 0; i < d.length; i++) {
-		if (/\S/.test(d[i])) {
-			var o = create('option', dl);
-			attr(o, 'value', d[i].trim());
-		}
 	}
 }
 
@@ -281,112 +231,15 @@ function vote(e, v) {
 		i = p.getAttribute('id');
 	}
 	
-	var u;
-	
-	if ( v == 1 ) {
-		u = '/vote/'+i+'/up';
-		ajax( u, 'text', function( r ) {
-			if ( r == 'problem' ) {
-				c.innerHTML = 'E';
-			} else {
-				s.className += ' p1';
-				c.innerHTML = '+1';
-			}
-		});
-	} else {
-		u = '/vote/'+i+'/down';
-		ajax( u, 'text', function( r ) {
-			if ( r == 'problem' ) {
-				c.innerHTML = 'E';
-			} else {
-				s.className += ' m1';
-				c.innerHTML = '-1';
-			}
-		});
-	}
-}
-
-function vlinks(e) {
-	var m = e.querySelectorAll('.meta')[0];
-	var t = attr( e.querySelectorAll('time')[0], 'datetime' );
-	var n = new Date();
-	t = utcFormat( t );
-	
-	var d = ((n.getTime() - t) * .001) >> 0;
-	if ( ( d / 86400 ) > 1 ) { // Max vote period is 2 days 68.95
-		m.innerHTML += " <span class='vote'>--</span>";
-		return;
-	}
-	
-	var l  = e.classList;
-	if ( l.contains( 'self' ) ) {
-		m.innerHTML += " <span class='vote'>#</span>";
-	} else if ( l.contains( 'p1' ) ) {
-		m.innerHTML += " <span class='vote'>+1</span>";
-	} else if ( l.contains( 'm1' ) ) {
-		m.innerHTML += " <span class='vote'>-1</span>";
-	} else {
-		m.innerHTML += " <span class='vote'>" +
-			"<a href='#' title='Upvote' onclick='javascript:vote(this, 1); return false;'>" +
-			"<img src='assets/img/u.png' alt='upvote'></a> " +
-			"<a href='#' title='Downvote' onclick='javascript:vote(this, -1); return false;'>" +
-			"<img src='assets/img/d.png' alt='downvote'></a></span>";
-	}
-}
-
-function mods(e) {
-	var id = e.getAttribute('id');
-	var m = e.querySelectorAll('.meta')[0];
-	if ( votes[id] != undefined ) {
-		if ( votes[id] === '0' ) {
-			e.className += ' self';
-		} else if ( votes[id] === '1' ) {
-			e.className += ' p1';
+	var u = ( v == 1 )? '/vote/'+i+'/up' : '/vote/'+i+'/down';
+	ajax( u, 'text', function( r ) {
+		if ( r == 'problem' ) {
+			c.innerHTML = 'E';
 		} else {
-			e.className += ' m1';
+			c.className += ( v == 1 )? ' p1' : ' m1';
+			c.innerHTML = ( v == 1 ) ? '+1' : '-1';
 		}
-	}
-	if ( edits[id] != undefined ) {
-		e.className += ' self';
-		m.innerHTML += "&emsp;( <a href='?id="+ id +"&auth="+ edits[id] +"'>edit</a> )";
-	}
-}
-
-function light(e) {
-	var p	= e.parentNode;
-	var h	= p.querySelector('.highlight');
-	var c	= p.querySelector('.container');
-	
-	if  ( h.style.display === 'none' ) {
-		h.style.display = 'block';
-		c.style.display = 'none';
-		e.innerHTML = 'Plain';
-	} else {
-		h.style.display = 'none';
-		c.style.display = 'block';
-		e.innerHTML = 'Formatted';
-	}
-}
-
-function code(e) {
-	var h = e.innerHTML.trim();
-	var l = h.match(/^.*((\r\n|\n|\r)|$)/gm);
-	var d = "<a href='#' class='anchors' onclick='javascript:light(this); return false;'>Plain</a>";
-	var o = '';
-	if (l.length == 0) { return; }
-	e.className = 'styled';
-	for(var i = 0; i < l.length; i++) {
-		o += '<span>' + l[i] + '</span>';
-	}
-	e.innerHTML = d + "<div class='container'>"+ e.innerHTML.trim() +'</div>';
-	e.innerHTML += "<div class='highlight'>"+ o +'</div>';
-}
-
-// TODO
-function validate(e) {
-	//alert(e.innerHTML);
-	//e.stop();
-	//return false;
+	});
 }
 
 function utcFormat( time ) {
@@ -399,10 +252,77 @@ function utcFormat( time ) {
 	return time;
 }
 
+function mods(e) {
+	var id = e.getAttribute('id');
+	var m = e.querySelectorAll('.meta')[0];
+	var t = attr( e.querySelectorAll('time')[0], 'datetime' );
+	var n = new Date();
+	t = utcFormat( t );
+	
+	var d = ((n.getTime() - t) * .001) >> 0;
+	if ( ( d / 86400 ) > 1 ) { // Max vote/edit period is 2 days 68.95
+		return;
+	}
+	
+	if ( votes[id] != undefined ) {
+		if ( votes[id] === '1' ) {
+			m.innerHTML += " <span class='vote p1'>+1</span>";
+		} else if ( votes[id] === '-1' ) {
+			m.innerHTML += " <span class='vote m1'>-1</span>";
+		}
+	} else if ( edits[id] != undefined ) {
+		m.innerHTML += " <span class='vote self'>"+
+			"( <a href='/posts/"+ id +"/edit/"+ edits[id] +"'>edit</a> )</span>";
+	} else {
+		m.innerHTML += " <span class='vote'>" +
+		"<a href='#' title='Upvote' onclick='javascript:vote(this, 1); return false;'>&nbsp;</a> / " +
+		"<a href='#' title='Downvote' onclick='javascript:vote(this, -1); return false;'>&nbsp;</a></span>";
+	}
+}
+
+function light(e) {
+	var p	= e.parentNode;
+	var h	= p.querySelector('.highlight');
+	var c	= p.querySelector('.container');
+	
+	if  ( h.style.display === 'none' ) {
+		h.style.display = 'block';
+		c.style.display = 'none';
+		e.innerHTML = '[view plain]';
+	} else {
+		h.style.display = 'none';
+		c.style.display = 'block';
+		c.select();
+		e.innerHTML = '[view formatted]';
+	}
+}
+
+function code(e) {
+	var k = e.getClientRects().length;
+	if ( k <= 1 ) {
+		return;
+	}
+	var h = e.innerHTML.trim();
+	var l = h.match(/^.*((\r\n|\n|\r)|$)/gm);
+	var d = "<a href='#' class='anchors' onclick='javascript:light(this); return false;'>[view plain]</a>";
+	var o = '';
+	if (l.length == 0) { return; }
+	e.className = 'styled';
+	var i;
+	for(i = 0; i < l.length; i++) {
+		o += '<span>' + l[i] + '</span>';
+	}
+	//alert ( i);
+	e.innerHTML = d + "<textarea class='container' rows='"+ ( i + 1 ) +"'>"+ h +'</textarea>';
+	e.innerHTML += "<div class='highlight'>"+ o +'</div>';
+}
+
 ready(function() {
 	var c = elements('code');
 	var p = document.querySelectorAll('.post');
 	var f = elements('form');
+	var t = document.querySelectorAll('[rel="tool"]');
+	
 	if (c.length) {
 		for (var i = 0; i<c.length; i++) {
 			code(c[i]);
@@ -411,7 +331,12 @@ ready(function() {
 	if (p.length && p[0].tagName == 'DIV' ) {
 		for (var i = 0; i<p.length; i++) {
 			mods(p[i]);
-			vlinks(p[i]);
+			//vlinks(p[i]);
+		}
+	}
+	if (t.length) {
+		for ( var i = 0; i < t.length; i++ ) {
+			tooltip(t[i]);
 		}
 	}
 	if (f.length) {
@@ -444,11 +369,8 @@ ready(function() {
 	var timer = function(time) {
 		if (!time)
 			return;
-		time = time.replace(/\.\d+/, ""); // remove milliseconds
-		time = time.replace(/-/, "/").replace(/-/, "/");
-		time = time.replace(/T/, " ").replace(/Z/, " UTC");
-		time = time.replace(/([\+\-]\d\d)\:?(\d\d)/, " $1$2"); // -04:00 -> -0400
-		time = new Date(time * 1000 || time);
+		time = utcFormat( time );
+		//time = new Date(time * 1000 || time);
 		
 		var now = new Date();
 		var seconds = ((now.getTime() - time) * .001) >> 0;
