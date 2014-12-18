@@ -8,6 +8,10 @@ define( 'EDIT_LIMIT',	1800 ); // ( Optional ) Edit period in seconds ( 1800 = 30
 
 define( 'AUTO_LOCK',	8 );	// Automatically close topics after this many days of inactivity
 
+define( 'GRACE',	1800 );	// Grace period in seconds after which auto-lock posts can still be 
+				// updated. This is for people who left their from open for a while 
+				// before clicking 'Post'
+
 // Hashed admin password ( default is 'password' ) Not doing anything yet
 define( 'ADMIN', 	'8d04e70695d4cf206099501be404e0e6.85adf6bf85ca4fc7ef8b04b5cbf04f5b2b0107a9' );
 
@@ -27,18 +31,20 @@ spl_autoload_register( function( $class ) {
 });
 
 $routes 	= array(
-	''			=> 'Index',
-	':page'			=> 'Index',
+	''			=> 'index',
+	':page'			=> 'index',
 	//'firehose'		=> 'Firehose',
 	//'firehose/:page'	=> 'Firehose',
-	'posts/:id'		=> 'Posts',
-	'posts/:id/:act'	=> 'Posts',
-	'posts/:id/:act/:auth'	=> 'Posts',
-	'threads/:id'		=> 'Threads',
-	'threads/:id/:page'	=> 'Threads',
-	'tags/:tag'		=> 'Tag',
-	'tags/:tag/:page'	=> 'Tag',
-	'vote/:id/:vote'	=> 'Posts'
+	'posts/:id'		=> 'post',
+	'posts/:id/:act'	=> 'post',
+	'posts/:id/:act/:auth'	=> 'post',
+	'threads/:id'		=> 'threads',
+	'threads/:id/:page'	=> 'threads',
+	'tags/:tag'		=> 'tag',
+	'tags/:tag/:page'	=> 'tag',
+	'vote/:id/:vote'	=> 'post',
+	'/search/'		=> 'search',
+	'/search/:page'		=> 'search'
 );
 
 
