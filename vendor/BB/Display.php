@@ -3,6 +3,12 @@
 namespace BB;
 
 class Display {
+	
+	public static function render( $template, $data = array() ) {
+		Helpers::requestKey( true );
+		require ( TEMPLATES . $template );
+	}
+	
 	public static function formatBytes( $bytes, $precision = 2 ) {
 		$units	= array( 'B', 'KB', 'MB', 'GB', 'TB' );
 		
@@ -56,7 +62,7 @@ class Display {
 		return self::pageLink( $prefix, $counter, $counter );
 	}
 	
-	protected function countedLinks( 
+	protected static function countedLinks( 
 		$prefix, 
 		$start, 
 		$end, 
@@ -182,6 +188,27 @@ class Display {
 		}
 		
 		echo $out . '</ul></nav>';
+	}
+	
+	/**
+	 * @link http://php.net/manual/en/function.time.php#108581
+	 */
+	public static function elapsed($secs){
+		$bit = array(
+			'y' => $secs / 31556926 % 12,
+			'w' => $secs / 604800 % 52,
+			'd' => $secs / 86400 % 7,
+			'h' => $secs / 3600 % 24,
+			'm' => $secs / 60 % 60,
+			's' => $secs % 60
+		);
+		
+		foreach($bit as $k => $v) {
+			if ( $v > 0 ) {
+				$ret[] = $v . $k;
+			}
+		}
+		echo join( ' ', $ret );
 	}
 
 	public static function printPosts( 
