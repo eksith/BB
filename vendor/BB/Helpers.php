@@ -3,13 +3,30 @@
 namespace BB;
 
 class Helpers {
+	private static $method;
+	
+	private static $domain;
+	
 	public static function method() {
-		return strtolower( $_SERVER['REQUEST_METHOD'] );
+		if ( !isset( self::$method ) ) {
+			self::$method = strtolower( $_SERVER['REQUEST_METHOD'] );
+		}
+		
+		return self::$method;
 	}
 	
-	/***
-	Security and privileges
-	 ***/
+	public static function domain() {
+		if ( !isset( self::$domain ) ) {
+			self::$domain = ( $_SERVER['HTTP_HOST'] != 'localhost' ) ? 
+					$_SERVER['HTTP_HOST'] : false;
+		}
+		
+		return self::$domain;
+	}
+	
+	/**
+	 * User submitted data ( GET/POST ) filter
+	 */
 	public static function filter( 
 		$method, 
 		$key, 
@@ -118,7 +135,8 @@ class Helpers {
 	}
 	
 	/**
-	 * PHP 5.5 compatibility for hash_pbkdf2 courtesy of https://defuse.ca/php-pbkdf2.htm
+	 * PHP 5.5 compatibility for hash_pbkdf2 courtesy of 
+	 * @link https://defuse.ca/php-pbkdf2.htm
 	 */
 	public static function pbkdf2( 
 		$algorithm, 
@@ -243,7 +261,7 @@ class Helpers {
 		}
 		
 		if ( null !== $created_at ) {
-			if ( !self::checkEditLimit( $created_at ) ) {
+			if ( !self::chkEditLimit( $created_at ) ) {
 				return false;
 			}
 		}
@@ -275,9 +293,65 @@ class Helpers {
 	/**
 	 * Verify editing time window
 	 */
-	public static function checkEditLimit( $created_at ) {
-		$exp = self::getEditLimit();
+	public static function chkEditLimit( $created_at ) {
+		$exp	= self::getEditLimit();
 		return ( time() - strtotime( $created_at ) > $exp ) ? false : true;
+	}
+	
+	/**
+	 * Check for user authentication
+	 */
+	public static function chkSessAuth( $user, $pass ) {
+		$mod	= self::getModAuth();
+		if ( empty( $mod ) ) {
+			return false;
+		}
+		if ( self::matchHash( $pass, $mod, true ) ) {
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Set the user session, and optionally the cookie, with hashed password
+	 */
+	public static function setSessAuth( $user, $pass, $cookie = true ) {
+		$_SESSION[$user]	= self::shash(
+						self::salt( 16 ), 
+						$pass, 
+						true 
+					);
+		if ( $cookie ) {
+			setcookie(
+				$user, 
+				$_SESSION[$user], 
+				strtotime( '+7 days' ), 
+				'/', 
+				self::domain() 
+			);
+		}
+	}
+	
+	/**
+	 * Check for user cookie or session
+	 */
+	public static function getSessAuth( $user, $pass ) {
+		if ( isset( $_SESSION[$user] ) ) {
+			return $_SESSION[$user];
+		} elseif ( isset( $_COOKIE[$user] ) ) {
+			$_COOKIE[$user];
+			return $data;
+		}
+		
+		return null;
+	}
+	
+	public static function delSessAuth( $user ) {
+		if ( isset( $_SESSION[$user] ) ) {
+			unset( $_SESSION[$user] );
+		}
+		
+		setcookie( $user, '-', 1, '/', self::domain() );
 	}
 	
 	/**
@@ -354,6 +428,14 @@ class Helpers {
 	
 	public static function field( $key ) {
 		return hash( 'tiger160,4', $key . self::requestKey() );
+	}
+	
+	public static function fields( $labels = array() ) {
+		$fields = array();
+		foreach( $label as $l ) {
+			$fields[$l] = self::field( $l );
+		}
+		return $fields;
 	}
 	
 	public static function fromArray( 
