@@ -95,6 +95,11 @@ class Post extends Data {
 	 */
 	public $posts_limit	= 1;
 	
+	/**
+	 * @var string Edit/Delete authorization key
+	 */
+	public $auth_key;
+	
 	public function __construct( array $data = null ) {
 		if ( empty( $data ) ) {
 			return;
@@ -221,7 +226,7 @@ class Post extends Data {
 		}
 		
 		while( $row = $stmt->fetch( \PDO::FETCH_CLASS, 'BB\Post' ) ) {
-			if ( isset( $filter['sub'] ) {
+			if ( isset( $filter['sub'] ) ) {
 				$result->parent_id = $row->parent_id;
 			} else {
 				$result->parent_id = $row->root_id;
@@ -379,7 +384,7 @@ class Post extends Data {
 	 */
 	protected function filterProperties() {
 		if ( isset( $this->raw ) && '' != trim( $this->raw ) ) {
-			$html = new \Microthread\Html();
+			$html			= new \Microthread\Html();
 			$this->body		= $html->filter( $this->raw );
 			$this->plain		= \Microthread\Html::plainText( $this->body );
 		}
