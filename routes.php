@@ -10,15 +10,16 @@ function method() {
 function index( $page = 1 ) {
 	$m = method();
 	if ( 'get' == $m ) {
-		$action	= "/";
-		$thread	= BB\Post::find( array( 'page' => $page ) );
-		$root	= 0;
-		$parent	= 0;
+		$data		= array();
 		
-		BB\Helpers::requestKey( true );
-		$fields = getFields( array( 'title', 'body' ) );
+		$data['action']	= "/";
+		$data['thread']	= BB\Post::find( array( 'page' => $page ) );
+		$data['root']	= 0;
+		$data['parent']	= 0;
 		
-		require ( TEMPLATES . '_index.php' );
+		$data['fields'] = BB\Helpers::fields( array( 'title', 'body' ) );
+		
+		BB\Display::render( '_index.php', $data );
 		
 	} elseif ( 'post' == $m ) {
 		$title	= filter( 'post', 'title', null, 'raw' );
@@ -31,32 +32,30 @@ function index( $page = 1 ) {
 
 function firehose( $page = 1 ) {
 	if ( 'get' == $m ) {
-		$action	= "/threads/{$page}";
+		$data		= array();
+		$data['action']	= "/";
+		$data['thread']	= BB\Post::find( array( 'page' => $page, 'new' => true ) );
+		$data['root']	= 0;
+		$data['parent']	= 0;
 		
-		$thread	= BB\Post::find( array( 'page' => $page, 'new' => true ) );
+		$data['fields'] = BB\Helpers::fields( array( 'title', 'body' ) );
 		
-		$root	= 0;
-		$parent	= 0;
-		
-		BB\Helpers::requestKey( true );
-		$fields = getFields( array( 'title', 'body' ) );
-		
-		require ( TEMPLATES . '_index.php' );
+		BB\Display::render( '_index.php', $data );
 	}
 }
 
 function thread( $id = 0, $page = 1 ) {
 	$m = method();
 	if ( 'get' == $m ) {
-		$action	= "/threads/{$id}";
-		$thread = BB\Post::find( array( 'thread' => $id, 'page' => $page ) );
-		$root	= $id;
-		$parent	= 0;		
+		$data		= array();
+		$data['action']	= "/threads/{$id}";
+		$data['thread']	= BB\Post::find( array( 'thread' => $id, 'page' => $page ) );
+		$data['root']	= $id;
+		$data['parent']	= 0;		
 		
-		BB\Helpers::requestKey( true );
-		$fields = getFields( array( 'title', 'body', 'root' ) );
+		$data['fields'] = BB\Helpers::fields( array( 'title', 'body', 'root' ) );
 		
-		require ( TEMPLATES . '_thread.php' );
+		BB\Display::render( '_thread.php', $data );
 		
 	} elseif ( 'post' == $m ) {
 		$title	= filter( 'post', 'title', null, 'raw' );
@@ -64,8 +63,10 @@ function thread( $id = 0, $page = 1 ) {
 		$root	= filter( 'post', 'root', $id, 'num' );
 		$parent	= filter( 'post', 'parent', $id, 'num' );
 		
-		$post	= initPost( $title, $body, $root, $parent, 0 );
-		savePost( $post );
+		$post	= initPost( $title, $body, $root, $parent );
+		\Microthread\Queue::register(
+			"savePost", array( $post )
+		);
 	}
 }
 
@@ -73,49 +74,69 @@ function post( $id, $act = 'view', $auth = '' ) {
 	$m = method();
 	if ( 'get' == $m ) {
 		if ( $act == 'edit' || $act == 'delete' ) {
-			if ( !checkEditPriv( $id, $auth ) ) {
+			if ( !checkEditPriv( $id, $auth, $info ) ) {
 				die( 'Edit window expired' );
 			}
 		}
 		
 		$posts = array();
-		BB\Helpers::requestKey( true );
 		
 		switch( $act ) {
 			case 'edit'	:
-				editView( $id );
+				editView( $id, $info );
 				break;
 			case 'delete'	:
-				deleteView( $id );
+				deleteView( $id, $info );
 				break;
 			default		:
 				plainView( $id );
 		}
 	} elseif ( 'post' == $m ) {
+		if ( !checkEditPriv( $id, $auth, $info ) ) {
+			die( 'Edit window expired' );
+		}
 		
+		$title	= filter( 'post', 'title', null, 'raw' );
+		$body	= filter( 'post', 'body', null, 'raw' );
+		$post	= initPost( $title, $body, null, null, true );
+		\Microthread\Queue::register(
+			"savePost", array( $post )
+		);
 		
 	}
 }
 
 function plainView( $id ) {
-	$post	= BB\Post::find( array( 'id' => $id ) );
-	$fields	= getFields( array( 'title', 'body', 'root', 'parent' ) );
+	$data		= array();
+	$data['post']	= BB\Post::find( array( 'id' => $id ) );
+	$data['fields']	= BB\Helpers::fields( array( 'title', 'body', 'root', 'parent' ) );
+	
+	BB\Display::render( '_post.php', $data );
 }
 
 function editView( $id ) {
-	$post	= BB\Post::find( array( 'edit' => $id ) );
-	$fields	= getFields( array( 'title', 'body', 'edit' ) );
+	$data		= array();
+	$data['post']	= BB\Post::find( array( 'edit' => $id ) );
+	$data['fields']	= BB\Helpers::fields( array( 'title', 'body', 'edit' ) );
+	
+	BB\Display::render( '_edit.php', $data );
 }
 
 function deleteView( $id ) {
-	$post	= BB\Post::find( array( 'id' => $id ) );
-	$fields	= getFields( array( 'edit' ) );
+	$data		= array();
+	$data['post']	= BB\Post::find( array( 'id' => $id ) );
+	$data['fields']	= BB\Helpers::fields( array( 'edit' ) );
 	
+	BB\Display::render( '_delete.php', $data );
 }
 
 // TODO: Moderation view
 function modView( $id ) {
+	$data		= array();
+	$data['post']	= BB\Post::find( array( 'id' => $id ) );
+	$data['fields']	= BB\Helpers::fields( array( 'edit' ) );
 	
+	BB\Display::render( '_mod.php', $data );
 }
 
 // TODO: Flag view
@@ -177,6 +198,11 @@ function view( $id, $act = 'read', $auth = '' ) {
 		}
 	} elseif ( 'post' == $m ) {
 		$body	= filter( 'post', 'body', null, 'raw' );
+		$pass	= filter( 'post', 'password', null, 'raw' );
+		
+		if ( BB\Helpers::matchAuth( $info['auth_key'], $info['created_at'] ) ) {
+			return true;
+		}
 		
 		if( empty( $body ) ) {
 			die( 'Post cannot be empty' );
@@ -186,6 +212,7 @@ function view( $id, $act = 'read', $auth = '' ) {
 		$root	= BB\Helpers::filter( 'post', 'root', 0, 'num' );
 		$parent	= BB\Helpers::filter( 'post', 'parent', 0, 'num' );
 		$edit	= BB\Helpers::filter( 'post', 'edit', 0, 'num' );
+		$pass	= BB\Helpers::filter( 'post', 'password', 0, 'num' );
 		
 		$post	= initPost( $title, $body, $root, $parent, $edit );
 		
@@ -206,11 +233,13 @@ function vote( $id, $ud ) {
 		if ( empty( $info ) ) {
 			die( 'No post found' );
 		}
-		if ( matchAuth( $info['auth_key'], $info['created_at'] ) ) {
+		
+		$key	= BB\Helpers\chkSessList( 'votes', $id );
+		if ( false !== $key ) {
 			die( 'already voted' );
 		}
 		
-		putSessList( 'votes', $id, $vote );
+		BB\Helpers\putSessList( 'votes', $id, $vote );
 		die( 'voted' );
 	}
 	die( 'problem' );
@@ -232,7 +261,7 @@ function search( $page = 1 ) {
 	}
 }
 
-function initPost( $title, $body, $root, $parent, $edit = null ) {
+function initPost( $title, $body, $root = 0, $parent = 0, $edit = null ) {
 	if ( empty( $edit ) ) {
 		$post = new BB\Post;
 		if ( !empty( $root ) ) {
@@ -241,35 +270,43 @@ function initPost( $title, $body, $root, $parent, $edit = null ) {
 		if ( !empty( $parent ) ) {
 			$post->parent_id	= $parent;
 		}
+		if ( !empty( $pass ) ) {
+			$post->auth_key		= $pass;
+		}
 	} else {
 		$posts = BB\Posts:find( 'edit' => $edit );
 		if ( count( $posts ) ) {
 			$post = $posts[0];
+			if ( !verify_password( $pass, $post['auth_key'] ) ) {
+				die ( 'Invalid password' );
+			}
+			
+			
 		} else {
-			die ( 'post not found' );
+			die ( 'Post not found' );
 		}
 	}
 	
-	$post->title = $title;
-	$post->raw = $body;
+	$post->title	= $title;
+	$post->raw	= $body;
 	
 	return $post;
 }
 
 function savePost( $post ) {
-	$auth	= BB\Helpers::getAuth();
-	if ( $post->save( $auth ) ) {
+	if ( $post->save( BB\Helpers::getAuth() ) ) {
 		$edit = BB\Helpers::editKey( $post->id );
 		BB\Helpers::deSessList( 'edits', $post->id );
 		BB\Helpers::putSessList( 'edits', $post->id, $edit );
 		header( 'Location: /posts/' . $post->id );
 		die();
+		
 	} else {
 		die( 'error' );
 	}
 }
 
-function checkEditPriv( $id, $auth ) {
+function checkEditPriv( $id, $auth, &$info ) {
 	if ( empty( $auth ) ) {
 		return false;
 	}
@@ -287,19 +324,5 @@ function checkEditPriv( $id, $auth ) {
 		return false;
 	}
 	
-	if ( BB\Helpers::matchAuth( $info['auth_key'], $info['created_at'] ) ) {
-		return true;
-	}
-	
-	return false;
-}
-
-
-
-function getFields( $labels = array() ) {
-	$fields = array();
-	foreach( $label as $l ) {
-		$fields[$l] = BB\Helpers::field( $l );
-	}
-	return $fields;
+	return BB\Helpers::matchAuth( $post['auth_key'], $post['created_at'] );
 }
