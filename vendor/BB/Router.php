@@ -8,7 +8,7 @@
  */
 namespace BB;
 
-class Router  {
+class Router {
 	
 	/**
 	 * @var array Substitute markers for path regular expressions
