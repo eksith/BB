@@ -20,7 +20,6 @@ define( 'PKGS',		PATH . 'vendor/' );
 define( 'TEMPLATES',	PATH . 'templates/' );
 
 
-
 /**
  * Autoloader
  */
@@ -29,6 +28,11 @@ spl_autoload_extensions( '.php' );
 spl_autoload_register( function( $class ) {
 	spl_autoload( str_replace( "\\", "/", $class ) );
 });
+
+// Idea from http://devzone.zend.com/1732/implementing-the-observer-pattern-with-splobserver-and-splsubject/
+$errors		= new BB\Exceptions\ExceptionObservable();
+$errors->attach( new BB\Exceptions\Logger() );
+$errors->attach( new BB\Exceptions\Display() );
 
 $routes 	= array(
 	''			=> 'index',
@@ -50,3 +54,5 @@ $routes 	= array(
 
 $router = new BB\Router();
 $router->route( $routes );
+
+$queue	= new Microthread\Queue();
