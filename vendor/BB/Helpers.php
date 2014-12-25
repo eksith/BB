@@ -134,6 +134,14 @@ class Helpers {
 		return hash( 'tiger160,4', $str );
 	}
 	
+	
+	/**
+	 * Create a cryptographically secure hash in hex format
+	 */
+	public static function salt( $size ) {
+		return bin2hex( mcrypt_create_iv( $size, MCRYPT_DEV_URANDOM ) );
+	}
+	
 	/**
 	 * PHP 5.5 compatibility for hash_pbkdf2 courtesy of 
 	 * @link https://defuse.ca/php-pbkdf2.htm
@@ -198,88 +206,6 @@ class Helpers {
 	}
 	
 	/**
-	 * Creates a simple hash. Optionally uses PBKDF2
-	 */
-	public static function shash( $salt, $key, $pbkdf = false ) {
-		if ( $pbkdf ) {
-			return $salt . '.' . self::pbkdf2( 'tiger192,4', $key, $salt, 1000, 20 );
-		}
-		
-		return $salt . '.' . hash( 'tiger160,4', $key . $salt );
-	}
-	
-	/**
-	 * Create a cryptographically secure hash in hex format
-	 */
-	public static function salt( $size ) {
-		return bin2hex( mcrypt_create_iv( $size, MCRYPT_DEV_URANDOM ) );
-	}
-	
-	/**
-	 * Match a given hash to a key
-	 */
-	public static function matchHash( $hash, $key, $pbkdf = false ) {
-		$p = strpos( $hash, '.' );
-		if  ( false === $p ) {
-			return false;
-	}
-		$salt = substr( $hash, 0, $p );
-		return $hash === self::shash( $salt, $key, $pbkdf );
-	}
-	
-	/**
-	 * Shorter editing key shown to the user (no pbkdf2). Optionally generates one
-	 */
-	public static function editKey( $id, $auth = null ) {
-		if ( null === $auth ) {
-			$salt = self::salt( 5 );
-			return self::shash( $salt, $id );
-		}
-		
-		return self::matchHash( $auth, $id );
-	}
-	
-	/**
-	 * Generates session based editing key
-	 */
-	public static function getAuth( $salt = null, $pass = null ) {
-		if ( null === $salt ) {
-			$salt = self::salt( 16 );
-		}
-		if ( null === $pass ) {
-			$pass = self::visitKey();
-		}
-		return self::shash( $salt, $pass, true );
-	}
-	
-	/**
-	 * Verify editing privileges by authorization key and created date
-	 */
-	public static function matchAuth( $hash, $created_at = null ) {
-		if ( empty( $hash ) ) {
-			return false;
-		}
-		
-		if ( null !== $created_at ) {
-			if ( !self::chkEditLimit( $created_at ) ) {
-				return false;
-			}
-		}
-		
-		$p = strpos( $hash, '.' );
-		if  ( false === $p ) {
-			return false;
-		}
-		
-		$salt = substr( $hash, 0, $p );
-		if ( $hash === self::getAuth( $salt ) ) {
-			return true;
-		}
-		
-		return false;
-	}
-	
-	/**
 	 * Get the maximum timelimit before editing privileges expire
 	 */
 	public static function getEditLimit() {
@@ -298,39 +224,6 @@ class Helpers {
 		return ( time() - strtotime( $created_at ) > $exp ) ? false : true;
 	}
 	
-	/**
-	 * Check for user authentication
-	 */
-	public static function chkSessAuth( $user, $pass ) {
-		$mod	= self::getModAuth();
-		if ( empty( $mod ) ) {
-			return false;
-		}
-		if ( self::matchHash( $pass, $mod, true ) ) {
-			return true;
-		}
-		return false;
-	}
-	
-	/**
-	 * Set the user session, and optionally the cookie, with hashed password
-	 */
-	public static function setSessAuth( $user, $pass, $cookie = true ) {
-		$_SESSION[$user]	= self::shash(
-						self::salt( 16 ), 
-						$pass, 
-						true 
-					);
-		if ( $cookie ) {
-			setcookie(
-				$user, 
-				$_SESSION[$user], 
-				strtotime( '+7 days' ), 
-				'/', 
-				self::domain() 
-			);
-		}
-	}
 	
 	/**
 	 * Check for user cookie or session
