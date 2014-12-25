@@ -140,7 +140,10 @@ class Post extends Data {
 	public static function find( $filter = array() ) {
 		$params	= array();
 		$result	= new Thread();
+		$thread	= false;
 		$order	= ' ORDER BY ';
+		$id	= 0;
+		
 		$sql	=
 			"SELECT p.id AS id, p.title AS title, p.created_at AS created_at, 
 			p.reply_count AS reply_count, parent.title AS parent_title, 
@@ -156,7 +159,6 @@ class Post extends Data {
 			LEFT JOIN posts AS root ON posts_family.root_id = root.id";
 		
 		if ( isset( $filter['id'] ) || isset( $filter['edit'] ) ) {
-			$id		= 0;
 			if ( isset( $filter['id'] ) ) {
 				$sql	.= ', p.body AS body';
 				$id	= $filter['id'];
@@ -171,6 +173,7 @@ class Post extends Data {
 			$order	.= 'id DESC';
 			
 		} elseif ( isset( $filter['thread'] ) || isset( $filter['sub'] ) ) {
+			$thread = true;
 			if ( isset( $filter['sub'] ) ) {
 				$params[':parent_id'] = $filter['sub'];
 				$from	.= ' WHERE posts_family.parent_id = :parent_id';
@@ -203,10 +206,12 @@ class Post extends Data {
 		} else {
 			$page			= ( isset( $filter['page'] ) ) ? 
 							( $filter['page'] ) : 1;
-			$thread->page		= $page;
-			$thread->limit		= ( $id > 0 ) ? self::POST_LIMIT : self::TOPIC_LIMIT;
 			
-			$params[':limit']	= $this->posts_limit;
+			$result->page		= $page;
+			$result->limit		= ( $thread ) ? 
+							self::POST_LIMIT : self::TOPIC_LIMIT;
+			
+			$params[':limit']	= $result->limit;
 			$params[':offset']	= ( $page - 1 ) * $params[':limit'];
 		
 			$sql	.= ' LIMIT :limit OFFSET :offset;';
@@ -218,14 +223,15 @@ class Post extends Data {
 		
 		
 		if ( isset( $filter['id'] ) || isset( $filter['edit'] ) ) {
-			return $stmt->fetchAll( \PDO::FETCH_CLASS, 'BB\Post' )[0];
+			return $stmt->fetchAll( \PDO::FETCH_CLASS, '\BB\Post' )[0];
 		}
 		
 		if ( isset( $filter['thread'] ) ) {
 			$result->id		= $filter['thread'];
 		}
 		
-		while( $row = $stmt->fetch( \PDO::FETCH_CLASS, 'BB\Post' ) ) {
+		$stmt->setFetchMode( \PDO::FETCH_CLASS, 'BB\Post');
+		while( $row = $stmt->fetch() ) {
 			if ( isset( $filter['sub'] ) ) {
 				$result->parent_id = $row->parent_id;
 			} else {
