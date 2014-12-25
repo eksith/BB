@@ -228,7 +228,6 @@ nav ul li a {
 nav ul li.active a, nav ul li span {
 	color: #444;
 }
-
 nav.main ul li:last-child:before  {
 	content: '';
 	padding: 0;
@@ -265,9 +264,8 @@ label span {
 label {
 	font-weight: 600;
 	color: #777;
-	display: block;
 }
-input[type='text'], input[type='search'], textarea {
+input[type='text'], input[type='password'], input[type='search'], textarea {
 	font: inherit;
 	color: #444;
 	background: #f7f7f7;
@@ -275,19 +273,20 @@ input[type='text'], input[type='search'], textarea {
 	padding: .4em;
 	border-radius: 3px;
 	box-shadow: inset 0 1px 0 #fff, 0 1px 0 rgba(0,0,0,.08);
+}
+input[type='text'], textarea {
 	display: block;
 	width: 100%;
 }
 code textarea {
 	overflow: hidden;
 }
-input[type='search'] {
-	background-repeat: no-repeat;
-	background-position: 95% 8px;
-	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAABmJLR0QA/wD/AP+gvaeTAAAAu0lEQVQokZXQsUqCURjG8Z9hDalTSIt6BQ4NgnMt4uDsYjfjjQQOgoggbSIoUkNLg6NgBN1BuNlQw3eGPH4f6DP+3+fP+55DkhoG2OALc7RlpIItHlFCHg28B3aUJ/RSeBkfKMSDLa4ytg9x/x9chPJPhvCNYgwXuEsp57CWvPEgLbzhJir3MYrLecxwK/mVF+zQxCfqeMAr9rFcCsMOqoF18YspLlPOPkoBqyBNzpGWQRrnTjFwjWeM/wDA1R/lgCdnygAAAABJRU5ErkJggg==);
+input[type='image'] {
+	margin: 0 0 0 4px;
+	display: inline;
 }
-input[type='search']:focus, input[type='search']:active{
-	background-image: none;
+input[type='search'] {
+	display: inline;
 }
 .tooltip {
 	position: absolute;
