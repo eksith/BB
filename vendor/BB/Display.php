@@ -26,7 +26,7 @@ class Display {
 	}
 
 	public static function formatNav( $url, $text ) {
-		static return "<li><a href='{$url}'>{$text}</a></li>";
+		return "<li><a href='{$url}'>{$text}</a></li>";
 	}
 	
 	protected static function pageLink( $prefix, $num, $text, $curr = false ) {
