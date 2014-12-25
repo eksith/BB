@@ -13,7 +13,7 @@ CREATE TABLE posts (
 	quality FLOAT NOT NULL DEFAULT 0, 
 	status INTEGER NOT NULL DEFAULT 0, 
 	auth_key VARCHAR NOT NULL,
-	ip VARCHAR PRIMARY KEY NOT NULL
+	ip VARCHAR NOT NULL
 );
 
 CREATE INDEX idx_posts_on_created_at ON posts ( created_at );
@@ -50,8 +50,8 @@ CREATE TABLE firewall(
 	response INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE INDEX idx_banned_on_created_at ON banned ( created_at );
-CREATE INDEX idx_banned_on_expires_at ON banned ( expires_at );
+CREATE INDEX idx_firewall_on_created_at ON firewall ( created_at );
+CREATE INDEX idx_firewall_on_expires_at ON firewall ( expires_at );
 
 
 
