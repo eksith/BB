@@ -17,42 +17,30 @@ define( 'ADMIN', 	'8d04e70695d4cf206099501be404e0e6.85adf6bf85ca4fc7ef8b04b5cbf0
 
 
 define( 'PKGS',		PATH . 'vendor/' );
-define( 'TEMPLATES',	PATH . 'templates/' );
+define( 'TEMPLATES',	PATH . 'vendor/BB/templates/' );
 
-
-/**
- * Autoloader
- */
 set_include_path( get_include_path() . PATH_SEPARATOR . PKGS );
 spl_autoload_extensions( '.php' );
 spl_autoload_register( function( $class ) {
 	spl_autoload( str_replace( "\\", "/", $class ) );
 });
 
-// Idea from http://devzone.zend.com/1732/implementing-the-observer-pattern-with-splobserver-and-splsubject/
-$errors		= new BB\Exceptions\ExceptionObservable();
-$errors->attach( new BB\Exceptions\Logger() );
-$errors->attach( new BB\Exceptions\Display() );
-
 $routes 	= array(
 	''			=> 'index',
 	':page'			=> 'index',
-	//'firehose'		=> 'Firehose',
-	//'firehose/:page'	=> 'Firehose',
+	'topics/:id'		=> 'topic',
+	'topics/:id/:page'	=> 'topic',
+	'threads/:id'		=> 'thread',
+	'threads/:id/:page'	=> 'thread',
 	'posts/:id'		=> 'post',
 	'posts/:id/:act'	=> 'post',
 	'posts/:id/:act/:auth'	=> 'post',
-	'threads/:id'		=> 'threads',
-	'threads/:id/:page'	=> 'threads',
-	'tags/:tag'		=> 'tag',
-	'tags/:tag/:page'	=> 'tag',
-	'vote/:id/:vote'	=> 'post',
-	'/search/'		=> 'search',
-	'/search/:page'		=> 'search'
+	'vote/:id/:vote'	=> 'vote',
+	'search'		=> 'search',
+	'search/:page'		=> 'search',
+	'autocomplete/:all'	=> 'autocomplete'
 );
 
 
 $router = new BB\Router();
 $router->route( $routes );
-
-$queue	= new Microthread\Queue();
