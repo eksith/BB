@@ -22,6 +22,7 @@ class Router {
 		':act'		=> '(?P<act>read|edit|delete|flag|lock)',
 		':tag'		=> '(?P<tag>[\pL\pN\s_,-]{3,100})',
 		':page'		=> '(?P<page>[1-9][0-9]*)',
+		':search'	=> '(?P<search>[\pL\pN\s_,.-\\/]{1,120})',
 		':vote'		=> '(?P<vote>up|down)'
 	);
 	
@@ -61,15 +62,10 @@ class Router {
 			
 			if ( preg_match( $regex, $path, $matches ) ) {
 				$found		= true;
-				$args		= filterMatches( $matches );
+				$args		= $this->filterMatches( $matches );
 				
 				if ( is_callable( $sendTo, true ) ) {
 					call_user_func_array( $sendTo, $args );
-				}
-				
-				// All match is special. We can keep going
-				if ( isset( $args['all'] ) ) {
-					continue;
 				}
 				break;
 			}
@@ -93,7 +89,7 @@ class Router {
 	}
 	
 	private function notFound() {
-		echo 'Couldn\'t find the page you\'re looking for';
+		require( TEMPLATES . '_notfound.php' );
 		exit();
 	}
 }
