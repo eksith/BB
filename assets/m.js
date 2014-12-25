@@ -45,6 +45,7 @@ if ( typeof Object.prototype.stop != 'function' ) {
 	}
 }
 
+// Get a DOM element by id
 function eId(e) {
 	if (typeof e === 'string') {
 		return document.getElementById(e);
@@ -52,25 +53,34 @@ function eId(e) {
 	return e;
 }
 
-
-function elements(e) {
-	return document.getElementsByTagName(e);
+// Query the DOM or a specific parent node for elements
+function find( s, e, n ) {
+	e = e || document;
+	q = e.querySelectorAll(s);
+	if ( n && q.length ) {
+		return q[0];
+	}
+	return q;
 }
 
+// Hide an element by id
 function hide(e) {
 	e = eId(e);
 	e.style.display = 'none';
 }
 
+// Show an element by id
 function show(e) {
 	e = eId(e);
 	e.style.display = '';
 }
 
+// Display a popup tooltip
 function tooltip(e) {
 	//TODO
 }
 
+// Check for an existence of an element or list of elements. Optionally create them
 function has(e, t, c, r) {
 	t = t || 'item';
 	c = c || false;
@@ -83,9 +93,9 @@ function has(e, t, c, r) {
 		return true;
 	}
 	
-	if (t === 'list' && elements(e).length) {
+	if (t === 'list' && find(e).length) {
 		if (r) {
-			return elements(e);
+			return find(e);
 		}
 		return true;
 	}
@@ -103,7 +113,7 @@ function has(e, t, c, r) {
 	return false;
 }
 
-
+// Creates a DOM element
 function create(e, p) {
 	var e = document.createElement(e);
 	
@@ -113,12 +123,14 @@ function create(e, p) {
 	return e;
 }
 
+// Remove a DOM element from parent
 function remove(e, p) {
 	if (typeof p !== 'undefined' && typeof e !== 'undefined') {
 		p.removeChild(e);
 	}
 }
 
+// Match and pass DOM element by selector
 function matches(el, selector) {
   return (el.matches || 
 		el.matchesSelector || 
@@ -128,10 +140,12 @@ function matches(el, selector) {
 		el.oMatchesSelector).call(el, selector);
 }
 
+// Next element in a DOM list
 function next(e) {
 	e.nextElementSibling;
 }
 
+// Gets or sets an element attribute
 function attr(e, a, v) {
 	if (typeof v === 'undefined') {
 		return (e.getAttribute(a)) ? 
@@ -140,13 +154,14 @@ function attr(e, a, v) {
 	e.setAttribute(a, v);
 }
 
-
+// Remove all child elements in a DOM element
 function empty(d) {
 	while(d.firstChild) {
 		d.removeChild(d.firstChild);
 	}
 }
 
+// AJAX request with callback
 function ajax(url, rtype, callback) {
 	var x;
 	url	= url	|| '/';
@@ -190,8 +205,9 @@ function ajax(url, rtype, callback) {
 	};
 }
 
+// Load a CSS or JavaScript file
 function load(f, callback) {
-	var h = elements('head')[0];
+	var h = find('head', document, true );
 	if (f.endsWith('.js')) {
 		var s = create('script', h);
 		attr(s, 'type', 'text/javascript');
@@ -205,6 +221,7 @@ function load(f, callback) {
 	}
 }
 
+// Trigger actions after window has completely loaded
 function ready(f) {
 	var ol = window.onload;
 	if (typeof window.onload != 'function') {
@@ -215,6 +232,11 @@ function ready(f) {
 		}
 		f();
 	}
+}
+
+// Form validation
+function validate(e) {
+	//TODO
 }
 
 /**
@@ -254,8 +276,8 @@ function utcFormat( time ) {
 
 function mods(e) {
 	var id = e.getAttribute('id');
-	var m = e.querySelectorAll('.meta')[0];
-	var t = attr( e.querySelectorAll('time')[0], 'datetime' );
+	var m = find('.meta', e, true);
+	var t = attr( find('time', e, true), 'datetime' );
 	var n = new Date();
 	t = utcFormat( t );
 	
@@ -282,8 +304,8 @@ function mods(e) {
 
 function light(e) {
 	var p	= e.parentNode;
-	var h	= p.querySelector('.highlight');
-	var c	= p.querySelector('.container');
+	var h	= find('.highlight', p, true);
+	var c	= find('.container', p, true);
 	
 	if  ( h.style.display === 'none' ) {
 		h.style.display = 'block';
@@ -312,16 +334,16 @@ function code(e) {
 	for(i = 0; i < l.length; i++) {
 		o += '<span>' + l[i] + '</span>';
 	}
-	//alert ( i);
-	e.innerHTML = d + "<textarea class='container' rows='"+ ( i + 1 ) +"'>"+ h +'</textarea>';
-	e.innerHTML += "<div class='highlight'>"+ o +'</div>';
+	
+	e.innerHTML = d + "<textarea class='container' rows='"+ ( i + 1 ) +"'>"+ h +'</textarea>' +
+			"<div class='highlight'>"+ o +'</div>';
 }
 
 ready(function() {
-	var c = elements('code');
-	var p = document.querySelectorAll('.post');
-	var f = elements('form');
-	var t = document.querySelectorAll('[rel="tool"]');
+	var c = find('code');
+	var p = find('.post');
+	var f = find('form');
+	var t = find('[rel="tooltip"]');
 	
 	if (c.length) {
 		for (var i = 0; i<c.length; i++) {
@@ -370,7 +392,6 @@ ready(function() {
 		if (!time)
 			return;
 		time = utcFormat( time );
-		//time = new Date(time * 1000 || time);
 		
 		var now = new Date();
 		var seconds = ((now.getTime() - time) * .001) >> 0;
@@ -398,7 +419,7 @@ ready(function() {
 			template('years', years)
 		) + templates.suffix;
 	};
-	var el = elements('time');
+	var el = find('time');
 	for (var i in el) {
 		var $this = el[i];
 		if (typeof $this === 'object') {
