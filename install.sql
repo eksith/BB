@@ -84,13 +84,25 @@ CREATE TABLE actions (
 	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP 
 );
 
-CREATE INDEX idx_actions_on_created_at ON sessions ( created_at );
+CREATE INDEX idx_actions_on_created_at ON actions ( created_at );
+
+
+CREATE TABLE sessions (
+	id VARCHAR PRIMARY KEY NOT NULL, 
+	skey VARCHAR NOT NULL, 
+	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	updated_at DATETIME DEFAULT NULL, 
+	data TEXT NOT NULL 
+);
+
+CREATE INDEX idx_sessions_on_created_at ON sessions ( created_at );
+CREATE INDEX idx_sessions_on_updated_at ON sessions ( updated_at );
 
 
 -- Post triggers
 CREATE TRIGGER post_after_insert AFTER INSERT ON posts FOR EACH ROW 
 BEGIN
-	INSERT INTO posts_search ( docid, search_data ) VALUES ( NEW.rowid, New.title || ' ' || NEW.plain );
+	INSERT INTO posts_search ( docid, search_data ) VALUES ( NEW.rowid, NEW.title || ' ' || NEW.plain );
 	UPDATE posts SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.rowid;
 END;
 
@@ -105,23 +117,12 @@ BEGIN
 	UPDATE posts SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.rowid;
 END;
 
-
 CREATE TRIGGER post_family_after_insert AFTER INSERT ON posts_family FOR EACH ROW 
 BEGIN
 	UPDATE posts SET reply_count = ( reply_count + 1 ), reply_at = CURRENT_TIMESTAMP 
 		WHERE id = NEW.root_id OR id = NEW.parent_id;
 END;
 
-
--- Voting
-CREATE TRIGGER post_vote_after_insert AFTER INSERT ON post_votes FOR EACH ROW
-BEGIN
-	UPDATE posts SET quality = ROUND( 
-		( quality + ( NEW.vote / strftime( '%s', 'now' ) - strftime( '%s', created_at ) ) ), 4
-	) WHERE id = NEW.post_id AND NEW.session_id NOT IN ( 
-		SELECT session_id FROM post_votes WHERE post_votes.post_id = NEW.post_id
-	);
-END;
 
 -- Taxonomy procedures
 CREATE TRIGGER taxonomy_after_insert AFTER INSERT ON taxonomy FOR EACH ROW 
@@ -137,7 +138,9 @@ END;
 CREATE TRIGGER taxonomy_before_delete BEFORE DELETE ON taxonomy FOR EACH ROW 
 BEGIN
 	DELETE FROM posts_taxonomy WHERE taxonomy_id = OLD.rowid;
+	DELETE FROM taxonomy_family WHERE parent_id = OLD.rowid OR child_id = OLD.rowid;
 END;
+
 
 -- Post moderation action
 CREATE TRIGGER actions_posts_after_insert AFTER INSERT ON actions FOR EACH ROW WHEN NEW.run = 0 
@@ -146,6 +149,30 @@ BEGIN
 	UPDATE posts SET status = 1 WHERE quality > 1;
 	UPDATE posts SET status = -1 WHERE quality < -1;
 END;
+
+
+-- Session moderation action
+CREATE TRIGGER actions_flag_after_insert AFTER INSERT ON actions FOR EACH ROW WHEN NEW.run = 1  
+BEGIN
+	INSERT INTO banned_sessions ( id ) 
+		SELECT session_id AS id FROM posts_sessions WHERE posts_sessions.post_id IN (
+			SELECT post_id FROM posts_votes 
+			JOIN posts ON posts_sessions.post_id = posts.id
+			WHERE posts.quality < -1
+		);
+END;
+
+
+-- Voting
+CREATE TRIGGER post_vote_after_insert AFTER INSERT ON post_votes FOR EACH ROW
+BEGIN
+	UPDATE posts SET quality = ROUND( 
+		( quality + ( NEW.vote / strftime( '%s', 'now' ) - strftime( '%s', created_at ) ) ), 4
+	) WHERE id = NEW.post_id AND NEW.session_id NOT IN ( 
+		SELECT session_id FROM post_votes WHERE post_votes.post_id = NEW.post_id
+	);
+END;
+
 
 PRAGMA encoding = "UTF-8";
 PRAGMA main.journal_mode = WAL;
