@@ -78,7 +78,6 @@ CREATE TABLE firewall(
 CREATE INDEX idx_firewall_on_created_at ON firewall ( created_at );
 CREATE INDEX idx_firewall_on_expires_at ON firewall ( expires_at );
 
-
 CREATE TABLE actions (
 	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
 	run INTEGER NOT NULL, 
@@ -88,7 +87,7 @@ CREATE TABLE actions (
 CREATE INDEX idx_actions_on_created_at ON sessions ( created_at );
 
 
-
+-- Post triggers
 CREATE TRIGGER post_after_insert AFTER INSERT ON posts FOR EACH ROW 
 BEGIN
 	INSERT INTO posts_search ( docid, search_data ) VALUES ( NEW.rowid, New.title || ' ' || NEW.plain );
