@@ -32,16 +32,17 @@ if (typeof Object.prototype.hasAttribute != 'function') {
 
 if ( typeof Object.prototype.stop != 'function' ) {
 	Object.prototype.stop = function(e) {
-		var ev = window.event ? window.event : e;
-		if ( ev.preventDefault ) {
-			ev.preventDefault(e);
+		if ( e.preventDefault ) {
+			e.preventDefault();
 		} else {
-			ev.returnValue = false;
+			e.returnValue = false;
 		}
-		if ( ev.cancelBubble ) {
-			ev.cancelBubble = true;
+		if ( e.stopPropagation ) {
+			e.stopPropagation();
 		}
-		return false;
+		if ( window.event ) {
+			window.event.cancelBubble = true;
+		}
 	}
 }
 
