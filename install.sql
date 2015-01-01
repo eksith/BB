@@ -72,6 +72,15 @@ CREATE INDEX idx_firewall_on_created_at ON firewall ( created_at );
 CREATE INDEX idx_firewall_on_expires_at ON firewall ( expires_at );
 
 
+CREATE TABLE actions (
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+	run INTEGER NOT NULL, 
+	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP 
+);
+
+CREATE INDEX idx_actions_on_created_at ON sessions ( created_at );
+
+
 
 CREATE TRIGGER post_after_insert AFTER INSERT ON posts FOR EACH ROW 
 BEGIN
