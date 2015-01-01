@@ -108,6 +108,22 @@ BEGIN
 	);
 END;
 
+-- Taxonomy procedures
+CREATE TRIGGER taxonomy_after_insert AFTER INSERT ON taxonomy FOR EACH ROW 
+BEGIN
+	UPDATE taxonomy SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.rowid;
+END;
+
+CREATE TRIGGER taxonomy_after_update AFTER UPDATE ON taxonomy FOR EACH ROW 
+BEGIN
+	UPDATE taxonomy SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.rowid;
+END;
+
+CREATE TRIGGER taxonomy_before_delete BEFORE DELETE ON taxonomy FOR EACH ROW 
+BEGIN
+	DELETE FROM posts_taxonomy WHERE taxonomy_id = OLD.rowid;
+END;
+
 
 PRAGMA encoding = "UTF-8";
 PRAGMA main.journal_mode = WAL;
