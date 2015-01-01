@@ -42,6 +42,13 @@ CREATE TABLE post_votes(
 
 CREATE INDEX idx_post_votes_on_created_at ON post_votes ( created_at );
 
+CREATE TABLE posts_sessions(
+	post_id INTEGER NOT NULL, 
+	session_id VARCHAR NOT NULL, 
+	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	PRIMARY KEY ( post_id, session_id )
+);
+
 CREATE TABLE taxonomy (
 	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
 	label VARCHAR NOT NULL, 
