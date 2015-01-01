@@ -142,6 +142,12 @@ BEGIN
 END;
 
 
+-- Session insert procedures
+CREATE TRIGGER session_after_insert AFTER INSERT ON sessions FOR EACH ROW BEGIN
+	UPDATE sessions SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.rowid;
+END;
+
+
 -- Post moderation action
 CREATE TRIGGER actions_posts_after_insert AFTER INSERT ON actions FOR EACH ROW WHEN NEW.run = 0 
 BEGIN
