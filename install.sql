@@ -75,7 +75,7 @@ CREATE INDEX idx_firewall_on_expires_at ON firewall ( expires_at );
 
 CREATE TRIGGER post_after_insert AFTER INSERT ON posts FOR EACH ROW 
 BEGIN
-	INSERT INTO posts_search ( docid, search_data ) VALUES ( NEW.rowid, NEW.plain );
+	INSERT INTO posts_search ( docid, search_data ) VALUES ( NEW.rowid, New.title || ' ' || NEW.plain );
 	UPDATE posts SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.rowid;
 END;
 
