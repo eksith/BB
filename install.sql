@@ -42,6 +42,24 @@ CREATE TABLE post_votes(
 
 CREATE INDEX idx_post_votes_on_created_at ON post_votes ( created_at );
 
+CREATE TABLE taxonomy (
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+	label VARCHAR NOT NULL, 
+	term VARCHAR NOT NULL, 
+	slug VARCHAR NOT NULL, 
+	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	updated_at DATETIME DEFAULT NULL, 
+	status INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE UNIQUE INDEX idx_taxonomy_on_terms ON taxonomy ( label ASC, term ASC );
+CREATE INDEX idx_taxonomy_on_status ON taxonomy ( status );
+
+CREATE TABLE posts_taxonomy (
+	post_id INTEGER NOT NULL, 
+	taxonomy_id INTEGER NOT NULL, 
+	PRIMARY KEY ( post_id, taxonomy_id ) 
+);
 
 CREATE TABLE firewall(
 	ip VARCHAR PRIMARY KEY NOT NULL, 
