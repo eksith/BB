@@ -133,6 +133,13 @@ BEGIN
 	DELETE FROM posts_taxonomy WHERE taxonomy_id = OLD.rowid;
 END;
 
+-- Post moderation action
+CREATE TRIGGER actions_posts_after_insert AFTER INSERT ON actions FOR EACH ROW WHEN NEW.run = 0 
+BEGIN
+	DELETE FROM posts WHERE quality <= -99;
+	UPDATE posts SET status = 1 WHERE quality > 1;
+	UPDATE posts SET status = -1 WHERE quality < -1;
+END;
 
 PRAGMA encoding = "UTF-8";
 PRAGMA main.journal_mode = WAL;
