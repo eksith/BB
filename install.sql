@@ -1,6 +1,8 @@
 -- BB Installation SQL script
 CREATE TABLE posts (
 	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+	topic_id INTEGER NOT NULL DEFAULT 0, 
+	parent_id INTEGER NOT NULL DEFAULT 0, 
 	title TEXT NOT NULL, 
 	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	updated_at DATETIME DEFAULT NULL, 
@@ -26,7 +28,7 @@ CREATE INDEX idx_posts_on_ip ON posts ( ip );
 CREATE VIRTUAL TABLE posts_search USING fts4 ( search_data );
 
 CREATE TABLE posts_family (
-	root_id INTEGER NOT NULL, 
+	topic_id INTEGER NOT NULL, 
 	parent_id INTEGER NOT NULL, 
 	child_id INTEGER NOT NULL, 
 	PRIMARY KEY ( root_id, parent_id, child_id )
@@ -69,12 +71,16 @@ CREATE TABLE posts_taxonomy (
 );
 
 CREATE TABLE firewall(
-	ip VARCHAR PRIMARY KEY NOT NULL, 
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+	ip DEFAULT VARCHAR NULL, 
+	session_id VARCHAR NULL, 
 	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	expires_at DATETIME DEFAULT NULL, 
 	response INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE INDEX idx_firewall_on_ip ON firewall ( ip );
+CREATE INDEX idx_firewall_on_session ON firewall ( session_id );
 CREATE INDEX idx_firewall_on_created_at ON firewall ( created_at );
 CREATE INDEX idx_firewall_on_expires_at ON firewall ( expires_at );
 
@@ -105,6 +111,32 @@ BEGIN
 	INSERT INTO posts_search ( docid, search_data ) VALUES ( NEW.rowid, NEW.title || ' ' || NEW.plain );
 	UPDATE posts SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.rowid;
 END;
+
+CREATE TRIGGER new_topic AFTER INSERT ON posts
+WHEN NEW.topic_id = 0 AND NEW.parent_id = 0
+BEGIN
+	INSERT INTO posts_family ( topic_id, parent_id, child_id ) 
+		VALUES ( NEW.id, NEW.id, NEW.id );
+
+END;
+
+CREATE TRIGGER new_reply AFTER INSERT ON posts
+WHEN NEW.parent_id = 0 AND NEW.topic_id <> 0 
+BEGIN
+	INSERT INTO posts_family ( topic_id, parent_id, child_id ) 
+		VALUES ( NEW.topic_id, NEW.id, NEW.id );
+END;
+
+CREATE TRIGGER new_sub AFTER INSERT ON posts
+WHEN NEW.topic_id = 0 AND NEW.parent_id <> 0
+BEGIN
+	INSERT INTO posts_family ( topic_id, parent_id, child_id ) 
+		VALUES ( (
+			SELECT TOP 1 topic_id FROM posts_family
+				WHERE parent_id = NEW.parent_id
+		), NEW.parent_id, NEW.id );
+END;
+
 
 CREATE TRIGGER post_before_update BEFORE UPDATE ON posts FOR EACH ROW 
 BEGIN
