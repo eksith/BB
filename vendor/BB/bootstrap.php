@@ -25,6 +25,9 @@ spl_autoload_register( function( $class ) {
 	spl_autoload( str_replace( "\\", "/", $class ) );
 });
 
+
+require( PATH . 'vendor/BB/routes.php' );
+
 $routes 	= array(
 	''			=> 'index',
 	':page'			=> 'index',
@@ -41,6 +44,8 @@ $routes 	= array(
 	'autocomplete/:all'	=> 'autocomplete'
 );
 
+// If this is the first visit, set the visit hash
+BB\Helpers::visitKey();
 
 $router = new BB\Router();
 $router->route( $routes );
