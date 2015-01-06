@@ -9,6 +9,14 @@ class Observable implements \SplSubject {
 		$this->observers = new \SplObjectStorage();
 	}
 	
+	public function __set( $name, $value ) {
+		$this->args[$name] = $value;
+	}
+	
+	public function __get( $name ) {
+		return isset( $this->args[$name] ) ? $this->args[$name] : null;
+	}
+	
 	public function attach( \SplObserver $observer ) {
 		$this->observers->attach( $observer );
 	}
