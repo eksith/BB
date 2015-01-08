@@ -1,8 +1,9 @@
 <?php
+<?php
+
 namespace BB\Models;
 
-class Data {
-	
+class Data {	
 	/**
 	 * @var int Unique identifier
 	 */
@@ -24,29 +25,32 @@ class Data {
 	public $updated_at;
 	
 	/**
-	 * @var object PDO connection object
+	 *  @var array List of PDO connections
 	 */
-	protected static $db = null;
+	protected static $connections = array();
 	
-	/**
-	 * @var string Database type
-	 */
-	protected static $dbType;
-	
-	protected static function init() {
-		if ( is_object( self::$db ) ) {
+	protected static init( $cn, $db ) {
+		if ( isset( $connections[$cn] ) && is_object( self::$connections[$cn] ) ) {
 			return;
 		}
-		self::$db = new \PDO( CONN );
-		self::$db->setAttribute( \PDO::ATTR_TIMEOUT, 5 );
-		self::$db->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
-		self::$db->setAttribute( \PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC );
+		
+		self::$connections[$cn] = new \PDO( $db );
+		self::$connections[$cn]->setAttribute( \PDO::ATTR_TIMEOUT, 5 );
+		self::$connections[$cn]->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
+		self::$connections[$cn]->setAttribute( \PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC );
+	}
+	
+	protected static getDb( $db ) {
+		$cn = md5( $db );
+		
+		self::init( $cn, $db );
+		return self::$connections[$cn];
 	}
 	
 	/**
 	 * Add parameters to conditional IN/NOT IN ( x,y,z ) query
 	 */
-	protected static function _addParams( 
+	protected static function addParams( 
 		$t, 
 		&$values, 
 		&$params	= array(), 
@@ -60,7 +64,7 @@ class Data {
 		
 		$in = rtrim( $in, ',' );
 	}
-	
+
 	/**
 	 * Prepares parameters for SELECT, UPDATE or INSERT SQL statements.
 	 * 
@@ -70,7 +74,7 @@ class Data {
 	 * For UPDATE or DELETE
 	 * name = :name, email = :email, password = :password etc...
 	 */
-	protected static function _setParams( 
+	protected static function setParams( 
 		$fields		= array(), 
 		$mode		= 'select', 
 		$table		= '' 
@@ -100,7 +104,10 @@ class Data {
 		}
 	}
 	
-	protected static _select( $fields ) {
+	/**
+	 * Multiple table select with optional aliases
+	 */
+	protected static multiSelect( $fields ) {
 		$sql  = 'SELECT ';
 		foreach( $fields as $table => $params ) {
 			foreach( $params as $field ) {
@@ -169,5 +176,5 @@ class Data {
 		}
 		
 		return $params;
-	}
+	}	
 }
