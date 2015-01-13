@@ -1,14 +1,50 @@
 <?php
 
-namespace BB;
-
-class Listener implements \SplObserver {
-	private $states;
-
-	public function addState( $state, $value = null ) {
-		$this->states[$state] = $value;
+namespace BB\Events;
+/**
+ * You can attach an EventListener to an event to be notified when a specific
+ * event has occurred.
+ *
+ * @author 	Thomas RAMBAUD
+ * @author	Eksith Rodrigo <reksith at gmail.com>
+ * @version	1.1
+ * @access 	public
+ */
+abstract class Listener implements \SplObserver {
+	/**
+	 * @var array Holds all states
+	 */
+	private $states = array();
+	
+	/**
+	 * Returns all states.
+	 *
+	 * @access	public
+	 * @return	void
+	 */
+	public function getAllStates() {
+		return $this->states;
 	}
-
+	
+	/**
+	 * Adds a new state.
+	 *
+	 * @access	public
+	 * @param	mixed	$state
+	 * @param	int		$stateValue
+	 * @return	void
+	 */
+	public function addState( $state, $stateValue = 1 ) {
+		$this->states[$state] = $stateValue;
+	}
+	
+	/**
+	 * @Removes a state.
+	 *
+	 * @access	public
+	 * @param	mixed	$state
+	 * @return 	bool
+	 */
 	public function removeState( $state ) {
 		if ( $this->hasState( $state ) ) {
 			unset( $this->states[$state] );
@@ -16,38 +52,53 @@ class Listener implements \SplObserver {
 		}
 		return false;
 	}
-
+	
+	/**
+	 * Checks if a given state exists.
+	 *
+	 * @access	public
+	 * @param	mixed	$state
+	 * @return	bool
+	 */
 	public function hasState( $state ) {
 		return isset( $this->states[$state] );
 	}
-
+	
+	/**
+	 * Return searched state if it exists.
+	 *
+	 * @access	public
+	 * @param	mixed	$state
+	 * @return	bool
+	 */
 	public function getState( $state ) {
-		if ( $this->hasState( $state ) ) {
-			return $this->states[$state];
-		}
-
-		return null;
+		return isset( $this->states[$state] ) 
+			$this->states[$state] : null;
 	}
-
-	public function getAllStates(){
-		return $this->states;
-	}
-
-	public function update(
-		\SplSubject $subject,
-		$trigger	= null,
-		&$args		= null
-	) {
-		if ( $trigger ) {
-			if ( method_exists( $this, $trigger ) ) {
-				call_user_func_array(
-					array( &$this, $trigger ), $args
-				);
+	
+	/**
+	 * Implementation of SplObserver::update().
+	 *
+	 * @access	public
+	 * @param	SplSubject	$subject
+	 * @param	mixed		$method
+	 * @param	mixed		&$arg			Any passed in arguments
+	 */
+	public function update( \SplSubject $subject, $method = null, &$args = null ) {
+		if ( $method ) {
+			if ( method_exists( $this, $method ) ) {
+				$this->{$method}( $args );
 			} else {
-				// method not found exception
+				throw new \Exception(
+						'The specified event method ' . get_called_class() . 
+						'::' . $method . ' does not exist.'
+					);
 			}
 		} else {
-			// direct update
+			throw new \Exception(
+					'The specified event method ' . get_called_class() . 
+					'::' . 'update() does not exist.'
+				);
 		}
 	}
 }
