@@ -33,22 +33,26 @@ class Storage {
 		return $e + $k;
 	}
 	
+	public static function parametize( &$params ) {
+		$keys	= array_map( function( $k ) {
+				return ":$k";
+			}, array_keys( $params ) );
+		$params	= array_combine( $keys, array_values( $params ) );
+	}
+	
 	public static function edit( $cxn, $table, $params, $where ) {
 		$sql	= "UPDATE $table SET " . self::setParams( $params, 'update');
-		foreach ( $where as $field => $value ) {
-			$sql			.= "$filed = :$field AND ";
-			$params[":$field"]	= $value;
-		}
 		
 		foreach( $where as $selector => $fields ) {
 			if ( is_array( $fields ) ) {
-			$sql	.= self::concat( $selector, $fields, $params );
+				$sql	.= self::concat( $selector, $fields, $params );
 			} else {
 				$sql			.= " $fields = :$fields";
-				$params[":$selector"]	= $fields; 
+				$params[$selector]	= $fields; 
 			}
 		}
-			
+		
+		self::parametize( $params );
 		
 		$db	= self::getDb( $cxn );
 		$stmt	= $db->prepare( $sql );
@@ -66,7 +70,9 @@ class Storage {
 		}
 		$sql	= "INSERT INTO $table ( " . self::setParams( $params, 'select' ) . 
 				') VALUES ( ' . self::setParams( $params, 'insert' ) . ')';
-				
+		
+		self::parametize( $params );
+		
 		$db	= self::getDb( $cxn );
 		$stmt	= $db->prepare( $sql );
 		$rows	= $stmt->execute( $params );
@@ -84,10 +90,10 @@ class Storage {
 		$sql	= ' ';
 		foreach ( $where as $field => $value ) {
 			$sql			.= "$filed = :$field $type ";
-			$params[":$field"]	= $value;
+			$params[$field]	= $value;
 		}
 		
-		return rtrim( $sql, "$type " );
+		return rtrim( $sql, " $type " );
 	}
 	
 	/**
