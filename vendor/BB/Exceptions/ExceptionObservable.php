@@ -1,7 +1,7 @@
 <?php
 namespace BB\Exceptions;
 
-class ExceptionObservable extends \BB\Observable {
+class ExceptionObservable extends \BB\Events\Event {
 	public $errType;
 	public $message;
 	
