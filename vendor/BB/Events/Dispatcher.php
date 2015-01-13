@@ -1,97 +1,120 @@
 <?php
-/**
- * Event dispatcher and queue for time consuming operations
- * after content has been sent to the user
- *
- * @author Eksith Rodrigo <reksith at gmail.com>
- * @license http://opensource.org/licenses/ISC ISC License
- * @version 0.2
- */
+
 namespace BB\Events;
-
+/**
+ * The Dispatcher class provides a container for storing and dispatching
+ * events. Modifications have been added to trigger specific methods (events)
+ * by name as opposed to forcing the usage of update(). The singleton pattern
+ * was also removed in addition to adding methods to override the default usage
+ * of __call().
+ *
+ * Based on the original code:
+ * http://forrst.com/posts/PHP_Event_handling-5Ke
+ *
+ * Ideas for scaling in the cloud:
+ * http://www.slideshare.net/beberlei/towards-the-cloud-eventdriven-architectures-in-php
+ *
+ * @author 	Thomas RAMBAUD
+ * @author	Corey Ballou
+ * @author	Eksith Rodrigo <reksith at gmail.com>
+ * @version 1.1
+ * @access 	public
+ */
 class Dispatcher {
-	private static $tasks = array();
-	private static $events = array();
-
-	public function __construct() {
-		register_shutdown_function( "BB\Events\Dispatcher::execute" );
+	
+	private $events = array();
+	
+	/**
+	 * Default constructor.
+	 *
+	 * @access	public
+	 * @return	void
+	 */
+	public function __construct() { }
+	
+	/**
+	 * Determine the total number of events.
+	 *
+	 * @access	public
+	 * @return	int
+	 */
+	public function count() {
+		return count( $this->events );
 	}
-
-	public static function hasEvent( $name ) {
-		if ( isset( self::$events[$name] ) ) {
+	
+	/**
+	 * Add a new event by name.
+	 *
+	 * @access	public
+	 * @param	string	$name
+	 * @param	mixed	$method
+	 * @return	Event
+	 */
+	public function add( $name, $method = null ) {
+		if ( !isset( $this->events[$name] ) ) {
+			$this->events[$name] = new Event( $method );
+		}
+	}
+	
+	/**
+	 * Retrieve an event by name. If one does not exist, it will be created
+	 * on the fly.
+	 *
+	 * @access	public
+	 * @param	string	$name
+	 * @return	Event
+	 */
+	public function get( $name ) {
+		if ( !isset( $this->events[$name] ) ) {
+			return $this->add( $name );
+		}
+		return $this->events[$name];
+	}
+	
+	/**
+	 * Retrieves all events.
+	 *
+	 * @access	public
+	 * @return	array
+	 */
+	public function getAll() {
+		return $this->events;
+	}
+	
+	/**
+	 * Trigger an event. Returns the event for monitoring status.
+	 *
+	 * @access	public
+	 * @param	string	$name
+	 * @param	mixed	$data	The data to pass to the triggered event(s)
+	 * @return	void
+	 */
+	public function trigger( $name, $data ) {
+		$this->get( $name )->notify( $data );
+	}
+	
+	/**
+	 * Remove an event by name.
+	 *
+	 * @access	public
+	 * @param	string	$name
+	 * @return	bool
+	 */
+	public function remove( $name ) {
+		if ( isset( $this->events[$name] ) ) {
+			unset( $this->events[$name] );
 			return true;
 		}
-
 		return false;
 	}
-
-	public static function addEvent( $name, $args = null ) {
-		if ( self::hasEvent( $name ) ) {
-			return;
-		}
-		self::$events[$name] = $args;
-	}
-
-	public static function remove( $name ) {
-		if ( self::hasEvent( $name ) ) {
-			unset( self::$events[$name] );
-			return true;
-		}
-		return false;
-	}
-
-	public static function getEvent( $name ) {
-		if ( self::hasEvent( $name ) ) {
-			return self::$events[$name];
-		}
-		return null;
-	}
-
-	public function trigger() {
-		foreach ( self::$events as $event => $args ) {
-			if ( null == $args ) {
-				$class = new $event();
-			} else {
-				$class = new $event( $args );
-			}
-		}
-	}
-
-	public static function registerShutdown() {
-		$task = func_get_args();
-		if ( empty( $task ) ) {
-			return;
-		}
-
-		if ( is_callable( $task[0] ) ) {
-			self::$tasks[] = $task;
-		}
-	}
-
+	
 	/**
-	 * Sequential Queue execution
+	 * Retrieve the names of all current events.
+	 *
+	 * @access	public
+	 * @return	array
 	 */
-	public static function execute() {
-		// Set completing the request as the first task
-		self::complete();
-		foreach( self::$tasks as $args ) {
-			$call = array_shift( $args );
-			call_user_func_array( $call, $args );
-		}
-		// Testing:
-		//echo 'True execution ' . round( microtime( true ) + START, 4 );
-	}
-
-	/**
-	 * This ensures all subsequent "complete" tasks are done after
-	 * the content has been sent to the user.
-	 */
-	public static function complete() {
-		if ( function_exists( 'fastcgi_finish_request' ) ) {
-			fastcgi_finish_request();
-		} else {
-			flush();
-			ob_flush();
-		}
+	public function getNames() {
+		return array_keys( $this->events );
 	}
 }
