@@ -1,46 +1,123 @@
 <?php
-
+namespace BB\Events;
+/**
+ * Attach event handlers to an event to be notified
+ * @author	Thomas RAMBAUD
+ * @author	Eksith Rodrigo <reksith at gmail.com>
+ * @version	1.1
+ * @access	public
+ */
 class Event implements \SplSubject {
-	public $args		= array();
+	/**
+	 * @var SplObjectStorage stores all attached observers
+	 */
 	private $observers;
 	
-	public function __construct(){
-		$this->observers = new \SplObjectStorage();
+	/**
+	 * Default constructor to initialize the observers.
+	 *
+	 * @access	public
+	 * @return	void
+	 */
+	public function __construct() {
+		 $this->observers = new \SplObjectStorage();
 	}
 	
-	public function __set( $name, $value ) {
-		$this->args[$name] = $value;
+	/**
+	 * Wrapper for the attach method, allowing for the addition
+	 * of a method name to call within the observer.
+	 *
+	 * @access	public
+	 * @param	SplObserver	$event
+	 * @param	mixed		$method
+	 * @return	Event
+	 */
+	public function bind( \SplObserver $event, $method = null ) {
+		if ( $this->has( $event ) ) {
+			$this->observers->rewind();
+			while( $this->observers->valid() ) {
+				if ( $this->observers->current() == $event ) {
+					$this->observers->setInfo( $method );
+					break;
+				}
+				$this->observers->next();
+			}
+			$this->observers->rewind();
+		} else {
+			$this->observers->attach( $event, $method );
+		}
+		return $this;
 	}
 	
-	public function __get( $name ) {
-		return isset( $this->args[$name] )? $this->args[$name] : null;
+	/**
+	 * Attach a new observer for the particular event.
+	 *
+	 * @access	public
+	 * @param	SplObserver	$event
+	 * @return	Event
+	 */
+	public function attach( \SplObserver $event ) {
+		if ( !$this->has( $event ) ) {
+			$this->observers->attach( $event );
+		}
+		return $this;
 	}
 	
-	public function bind( \SplObserver $observer, $trigger = null ) {
-		$this->observers->attach( $observer, $trigger );
+	/**
+	 * Detach an existing observer from the particular event.
+	 *
+	 * @access	public
+	 * @param	SplObserver	$event
+	 * @return	Event
+	 */
+	public function detach( \SplObserver $event ) { 
+		if ( $this->has( $event ) ) {
+			$this->observers->detach( $event );	
+		}
+		return $this;
 	}
 	
-	public function attach( \SplObserver $observer ) {
-		$this->observers->attach( $observer );
+	/**
+	 * Find if an observer already exists in the collection.
+	 *
+	 * @access	public
+	 * @param	SplObserver	$event
+	 * @return	boolean
+	 */
+	public function has( \SplObserver $event ) {
+		if ( $this->observers->contains( $event ) ) {
+			return true;
+		}
+		return false;
 	}
 	
-	public function detach( \SplObserver $observer ) {
-		$this->observers->detach( $observer );
-	}
-	
+	/**
+	 * Notify all event observers that the event was triggered.
+	 *
+	 * @access	public
+	 * @param	mixed	&$args
+	 */
 	public function notify( &$args = null ) {
 		$this->observers->rewind();
-		
-		while( $this->observers->valid() ) {
-			$trigger	= $this->observers->getInfo();
+		while ( $this->observers->valid() ) {
+			$method		= $this->observers->getInfo();
 			$observer	= $this->observers->current();
-			$observer->update( $this, $trigger, $args );
+			$observer->update( $this, $method, $args );
 			
+			/**
+			 * On to the next observer for notification
+			 */
 			$this->observers->next();
 		}
 	}
 	
-	public function getObservers() {
+	/**
+	 * Retrieves all observers.
+	 *
+	 * @access	public
+	 * @return	SplObjectStorage
+	 */
+	public function getHandlers() {
 		return $this->observers;
 	}
 }
