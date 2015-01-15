@@ -99,8 +99,11 @@ class Router extends \BB\Events\Event {
 		if ( count( $flow ) <= 1 ) {
 			$this->notFound();
 		}
+		$flow[0] = '\\BB\\Routes\\' . $flow[0];
 		$ctrl	= new $flow[0];
-		$ctrl->bind( $ctrl, $flow[1] );
+		if ( count( $flow ) > 1 ) {
+			$ctrl->bind( $ctrl, $flow[1] );
+		}
 		$ctrl->addState(
 			'method',
 			strtolower( $_SERVER['REQUEST_METHOD'] )
