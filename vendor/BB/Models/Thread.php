@@ -4,11 +4,15 @@
  *
  * @author Eksith Rodrigo <reksith at gmail.com>
  * @license http://opensource.org/licenses/ISC ISC License
- * @version 0.1
+ * @version 0.2
  */
 namespace BB\Models;
 
-class Thread {
+class Thread extends Model {
+	const POST_LIMIT	= 30;
+	
+	const TOPIC_LIMIT	= 60;
+	
 	public $id		= 0;
 	
 	public $parent_id	= 0;
@@ -47,5 +51,43 @@ class Thread {
 	
 	public function postCount() {
 		return $this->posts->count();
+	}
+	
+	public static function find( $filter = array() ) {
+		$thread	=  false;
+		$params = array();
+		$fields = Post::$fields;
+		
+		$page			= ( isset( $filter['page'] ) ) ? 
+							( $filter['page'] ) : 1;
+		
+		if ( isset( $filter['thread'] ) || isset( $filter['sub'] ) ) {
+			$thread	= true;
+			$order	= Post::$order . 'ASC';
+		} else {
+			$order	= Post::$order . 'DESC';
+		}
+		
+		$fields['p'][] = 'summary';
+		$order	.= 'id DESC';
+		$result->page		= $page;
+		$result->limit		= ( $thread ) ? 
+						self::POST_LIMIT : self::TOPIC_LIMIT;
+			
+		$params['limit']	= $result->limit;
+		$params['offset']	= ( $page - 1 ) * $params['limit'];
+	
+		$sql	.= ' LIMIT :limit OFFSET :offset;';
+		
+		$result = new Thread();
+		Storage::find( 
+			CONTENT_STORE,
+			$sql, 
+			$params, 
+			'multiple', 
+			'\BB\Post', 
+			$result 
+		);
+		return $result;
 	}
 }
