@@ -1,7 +1,7 @@
 <?php
 namespace BB\Exceptions;
 
-class Display implements \SplObserver {
+class Display extends \BB\Events\Listener {
 	private $html =<<<HTML
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" dir='ltr'>
