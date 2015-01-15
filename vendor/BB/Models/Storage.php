@@ -33,15 +33,57 @@ class Storage {
 		return $e + $k;
 	}
 	
-	public static function parametize( &$params ) {
-		$keys	= array_map( function( $k ) {
-				return ":$k";
-			}, array_keys( $params ) );
-		$params	= array_combine( $keys, array_values( $params ) );
+	public static function addParams( &$stmt, &$params ) {
+		foreach( $params as $k => &$v ) {
+			$stmt->bindParam( ":$k", $v );
+		}
+	}
+	
+	public static function find( 
+		$cxn, 
+		$sql, 
+		$params, 
+		$type, 
+		$model = null, 
+		&$populate = null 
+	) {
+		$db	= self::getDb( $cxn );
+		$stmt	= $db->prepare( $sql );
+		
+		self::addParams( $stmt, $params );
+		$rows	= $stmt->execute();
+		
+		switch( $type ) {
+			case 'single' :
+				if ( $model ) {
+					return $stmt->fetchAll( \PDO::FETCH_CLASS, $model )[0];
+				}
+				return $stmt->fetchAll( \PDO::FETCH_OBJECT )[0];
+				
+			class 'multiple' :
+				if ( !is_object( $populate ) ) {
+					if ( $model ) {
+						return $stmt->fetchAll( \PDO::FETCH_CLASS, $model );
+					}
+					return $stmt->fetchAll( \PDO::FETCH_OBJECT );
+				}
+				if ( $model ) {
+					$stmt->setFetchMode( \PDO::FETCH_CLASS, $model );
+				}
+				while ( $row = $stmt->fetch() ) {
+					$populate->add( $row );
+				}
+				return true;
+				
+			case 'rows' :
+				return $rows;
+			default:
+				return ( $rows ) ? true : false;
+		}
 	}
 	
 	public static function edit( $cxn, $table, $params, $where ) {
-		$sql	= "UPDATE $table SET " . self::setParams( $params, 'update');
+		$sql	= "UPDATE $table SET " . self::sqlParams( $params, 'update');
 		
 		foreach( $where as $selector => $fields ) {
 			if ( is_array( $fields ) ) {
@@ -52,11 +94,13 @@ class Storage {
 			}
 		}
 		
-		self::parametize( $params );
 		
 		$db	= self::getDb( $cxn );
 		$stmt	= $db->prepare( $sql );
-		$rows	= $stmt->execute( $params );
+		
+		
+		self::addParams( $stmt, $params );
+		$rows	= $stmt->execute();
 		
 		if ( $rows > 0 ) {
 			return true;
@@ -68,16 +112,14 @@ class Storage {
 		if ( !preg_match('/[^a-z\_\.]/i', $table ) ) {
 			throw new Exception( 'Invalid table name' );
 		}
-		$sql	= "INSERT INTO $table ( " . self::setParams( $params, 'select' ) . 
-				') VALUES ( ' . self::setParams( $params, 'insert' ) . ')';
-		
-		self::parametize( $params );
+		$sql	= "INSERT INTO $table ( " . self::sqlParams( $params, 'select' ) . 
+				') VALUES ( ' . self::sqlParams( $params, 'insert' ) . ')';
 		
 		$db	= self::getDb( $cxn );
 		$stmt	= $db->prepare( $sql );
-		$rows	= $stmt->execute( $params );
 		
-		if ( $rows > 0 ) {
+		self::addParams( $stmt, $params );
+		if ( $stmt->execute() ) {
 			return $id ? $db->lastInsertId() : true;
 		}
 		return false;
@@ -123,7 +165,7 @@ class Storage {
 	 * For UPDATE or DELETE
 	 * name = :name, email = :email, password = :password etc...
 	 */
-	public static function setParams( 
+	public static function sqlParams( 
 		$fields		= array(), 
 		$mode		= 'select', 
 		$table		= '' 
