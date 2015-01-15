@@ -22,7 +22,8 @@ namespace BB\Events;
  */
 class Dispatcher {
 	
-	private $events = array();
+	private static $handlers	= array();
+	private static $loaded		= array();
 	
 	/**
 	 * Default constructor.
@@ -33,27 +34,42 @@ class Dispatcher {
 	public function __construct() { }
 	
 	/**
-	 * Determine the total number of events.
+	 * Determine the total number of handlers.
 	 *
 	 * @access	public
 	 * @return	int
 	 */
 	public function count() {
-		return count( $this->events );
+		return count( self::$handlers );
 	}
 	
 	/**
-	 * Add a new event by name.
+	 * Check if a handler has already been added
+	 *
+	 * @access	public
+	 * @return	boolean
+	 */
+	public function hasHandler( $name ) {
+		if ( isset( self::$handlers[$name] ) ) {
+			return true;
+		}
+
+		return false;
+	}
+	
+	/**
+	 * Add a new handler by name.
 	 *
 	 * @access	public
 	 * @param	string	$name
-	 * @param	mixed	$method
+	 * @param	mixed	$args
 	 * @return	Event
 	 */
-	public function add( $name, $method = null ) {
-		if ( !isset( $this->events[$name] ) ) {
-			$this->events[$name] = new Event( $method );
+	public function addHandler( $name, $args = null ) {
+		if ( $this->hasHandler( $name ) ) {
+			return;
 		}
+		self::$handlers[$name] = $args;
 	}
 	
 	/**
@@ -62,27 +78,24 @@ class Dispatcher {
 	 *
 	 * @access	public
 	 * @param	string	$name
-	 * @return	Event
+	 * @return	Event|null
 	 */
-	public function get( $name ) {
-		if ( !isset( $this->events[$name] ) ) {
-			return $this->add( $name );
-		}
-		return $this->events[$name];
+	public function getHandler( $name ) {
+		return isset( self::$handlers[$name] )? self::$handlers[$name] : null;
 	}
 	
 	/**
-	 * Retrieves all events.
+	 * Retrieves all handlers.
 	 *
 	 * @access	public
 	 * @return	array
 	 */
 	public function getAll() {
-		return $this->events;
+		return self::$handlers;
 	}
 	
 	/**
-	 * Trigger an event. Returns the event for monitoring status.
+	 * Trigger a specific handler. Returns the event for monitoring status.
 	 *
 	 * @access	public
 	 * @param	string	$name
@@ -90,31 +103,50 @@ class Dispatcher {
 	 * @return	void
 	 */
 	public function trigger( $name, $data ) {
-		$this->get( $name )->notify( $data );
+		if ( $handler = self::getHandler( $name ) ) {
+			$handler->notify( $data );
+		}
 	}
 	
 	/**
-	 * Remove an event by name.
+	 * Remove a handler by name.
 	 *
 	 * @access	public
 	 * @param	string	$name
 	 * @return	bool
 	 */
-	public function remove( $name ) {
-		if ( isset( $this->events[$name] ) ) {
-			unset( $this->events[$name] );
+	public function removeHandler( $name ) {
+		if ( $this->hasHandler( $name ) ) {
+			unset( self::$handlers[$name] );
 			return true;
 		}
 		return false;
 	}
 	
 	/**
-	 * Retrieve the names of all current events.
+	 * Retrieve the names of all current handlers.
 	 *
 	 * @access	public
 	 * @return	array
 	 */
 	public function getNames() {
-		return array_keys( $this->events );
+		return array_keys( self::$handlers );
+	}
+	
+	/**
+	 * Load and dispatch handle events
+	 *
+	 * @access	public
+	 */
+	public function dispatch() {
+		foreach ( self::$handlers as $event => $args ) {
+			$class	= 'BB\\'. $event
+			
+			if ( null == $args ) {
+				self::$loaded[] = new $class();
+			} else {
+				self::$loaded[] = new $class( $args );
+			}
+		}
 	}
 }
